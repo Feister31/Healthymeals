@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Healthy Meal Plan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #f0f4ff;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .day-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .day-name {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .protein-badge {
+            background: #4ade80;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .meals {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .meal {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .meal-type {
+            color: #764ba2;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .meal-name {
+            color: #1f2937;
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .meal-details {
+            color: #6b7280;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .time-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        
+        .shopping-tip {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .shopping-tip h3 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        
+        .shopping-tip ul {
+            margin-left: 20px;
+            color: #065f46;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 Your Weekly Meal Plan</h1>
+        <p class="subtitle">High-protein vegetarian meals • Quick & easy • Budget-friendly</p>
+        
+        <div class="tags">
+            <span class="tag">🥗 25-30g protein per meal</span>
+            <span class="tag">⏱️ Under 30 minutes</span>
+            <span class="tag">💰 Budget-friendly</span>
+            <span class="tag">🌿 100% Vegetarian</span>
+        </div>
+
+        <!-- Monday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Monday</div>
+                <div class="protein-badge">~85g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Greek Yogurt Protein Bowl</div>
+                    <div class="meal-details">
+                        Greek yogurt (1.5 cups) topped with granola, chia seeds, banana, and almond butter
+                        <br><span class="time-badge">⏱️ 5 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Chickpea & Quinoa Buddha Bowl</div>
+                    <div class="meal-details">
+                        Roasted chickpeas, cooked quinoa, spinach, cucumber, tomatoes, tahini dressing
+                        <br><span class="time-badge">⏱️ 25 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Lentil Dal with Brown Rice</div>
+                    <div class="meal-details">
+                        Red lentils cooked with curry spices, coconut milk, served over brown rice
+                        <br><span class="time-badge">⏱️ 30 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tuesday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Tuesday</div>
+                <div class="protein-badge">~90g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Protein Smoothie & Toast</div>
+                    <div class="meal-details">
+                        Protein powder, banana, spinach, peanut butter, almond milk + whole grain toast with hummus
+                        <br><span class="time-badge">⏱️ 5 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Black Bean Burrito Bowl</div>
+                    <div class="meal-details">
+                        Black beans, brown rice, lettuce, salsa, avocado, cheese, sour cream
+                        <br><span class="time-badge">⏱️ 20 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Tofu Stir-Fry with Edamame</div>
+                    <div class="meal-details">
+                        Crispy tofu, edamame, mixed vegetables, soy-ginger sauce, served over rice
+                        <br><span class="time-badge">⏱️ 25 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wednesday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Wednesday</div>
+                <div class="protein-badge">~85g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Scrambled Eggs & Veggie Wrap</div>
+                    <div class="meal-details">
+                        3 eggs scrambled with peppers, onions, cheese in a whole wheat tortilla
+                        <br><span class="time-badge">⏱️ 10 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">White Bean & Spinach Soup</div>
+                    <div class="meal-details">
+                        Cannellini beans, spinach, tomatoes, garlic, vegetable broth + whole grain bread
+                        <br><span class="time-badge">⏱️ 25 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Cottage Cheese Pasta Bowl</div>
+                    <div class="meal-details">
+                        Whole wheat pasta, cottage cheese sauce, roasted broccoli, cherry tomatoes, parmesan
+                        <br><span class="time-badge">⏱️ 20 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thursday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Thursday</div>
+                <div class="protein-badge">~88g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Protein Oatmeal</div>
+                    <div class="meal-details">
+                        Oats cooked with protein powder, topped with berries, walnuts, and Greek yogurt
+                        <br><span class="time-badge">⏱️ 10 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Caprese Panini with Lentil Soup</div>
+                    <div class="meal-details">
+                        Mozzarella, tomato, pesto panini + quick lentil soup (canned lentils work great!)
+                        <br><span class="time-badge">⏱️ 15 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Spicy Peanut Tempeh Bowl</div>
+                    <div class="meal-details">
+                        Marinated tempeh, brown rice, steamed broccoli, carrots, peanut sauce
+                        <br><span class="time-badge">⏱️ 25 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Friday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Friday</div>
+                <div class="protein-badge">~82g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Veggie Omelet</div>
+                    <div class="meal-details">
+                        3-egg omelet with mushrooms, spinach, tomatoes, feta cheese + whole grain toast
+                        <br><span class="time-badge">⏱️ 12 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Loaded Hummus Plate</div>
+                    <div class="meal-details">
+                        Hummus with roasted chickpeas, cucumber, tomatoes, olives, feta, pita bread
+                        <br><span class="time-badge">⏱️ 10 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Bean & Cheese Quesadillas</div>
+                    <div class="meal-details">
+                        Black beans, mixed cheese, peppers in whole wheat tortillas + side salad
+                        <br><span class="time-badge">⏱️ 15 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saturday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Saturday</div>
+                <div class="protein-badge">~86g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Protein Pancakes</div>
+                    <div class="meal-details">
+                        Cottage cheese pancakes topped with Greek yogurt and fresh berries
+                        <br><span class="time-badge">⏱️ 15 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Mediterranean Couscous Bowl</div>
+                    <div class="meal-details">
+                        Couscous, chickpeas, cucumbers, tomatoes, feta, olives, lemon-herb dressing
+                        <br><span class="time-badge">⏱️ 20 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Veggie Chili with Cornbread</div>
+                    <div class="meal-details">
+                        Three-bean chili with kidney, black, and pinto beans + store-bought cornbread
+                        <br><span class="time-badge">⏱️ 30 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sunday -->
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">Sunday</div>
+                <div class="protein-badge">~84g protein</div>
+            </div>
+            <div class="meals">
+                <div class="meal">
+                    <div class="meal-type">Breakfast</div>
+                    <div class="meal-name">Breakfast Burrito</div>
+                    <div class="meal-details">
+                        Scrambled eggs, black beans, cheese, avocado, salsa in whole wheat tortilla
+                        <br><span class="time-badge">⏱️ 12 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Lunch</div>
+                    <div class="meal-name">Greek Salad with Chickpeas</div>
+                    <div class="meal-details">
+                        Mixed greens, chickpeas, cucumber, tomatoes, olives, feta, pita bread, tzatziki
+                        <br><span class="time-badge">⏱️ 10 min</span>
+                    </div>
+                </div>
+                <div class="meal">
+                    <div class="meal-type">Dinner</div>
+                    <div class="meal-name">Baked Falafel Bowl</div>
+                    <div class="meal-details">
+                        Homemade baked falafel, quinoa, tahini sauce, roasted vegetables
+                        <br><span class="time-badge">⏱️ 30 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="shopping-tip">
+            <h3>💡 Budget-Friendly Shopping Tips</h3>
+            <ul>
+                <li><strong>Buy in bulk:</strong> Dried beans, lentils, quinoa, rice, oats are all cheaper in bulk</li>
+                <li><strong>Protein staples:</strong> Eggs, Greek yogurt, cottage cheese, canned beans, tofu, and tempeh are your affordable protein heroes</li>
+                <li><strong>Frozen veggies:</strong> Just as nutritious and more budget-friendly than fresh</li>
+                <li><strong>Meal prep:</strong> Cook grains and beans in batches on Sunday to save time during the week</li>
+                <li><strong>Generic brands:</strong> Store-brand Greek yogurt, beans, and grains are often half the price of name brands</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
