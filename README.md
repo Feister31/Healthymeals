@@ -1,2 +1,1 @@
-# Healthymeals
-A list of healthy meals for everyday use
+Im planing my initial idea on how to create a better way to intergrate cusines from various parts of the world to create a more sustainable, healthy diet habits to limit food waste as well as build independence for all ages.
