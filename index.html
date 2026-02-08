@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Meal Planner</title>
+    <title>Smart Meal Planner - Airtable Connected</title>
     <style>
         * {
             margin: 0;
@@ -37,6 +37,27 @@
             color: #666;
             margin-bottom: 30px;
             font-size: 1.1em;
+        }
+        
+        .connection-status {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .connection-status.connected {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        
+        .connection-status.error {
+            background: #fee2e2;
+            border-color: #ef4444;
         }
         
         /* Navigation Tabs */
@@ -150,7 +171,78 @@
             border-color: #667eea;
         }
         
-        /* Meal Cards */
+        /* Recipe Cards */
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .recipe-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+        
+        .recipe-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .recipe-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .recipe-tag {
+            background: #f0f4ff;
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+        
+        .recipe-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .recipe-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .recipe-stat-label {
+            font-size: 0.75em;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .recipe-stat-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        /* Meal Planning */
         .day-card {
             background: #f8f9ff;
             border-radius: 15px;
@@ -181,12 +273,25 @@
             font-weight: 600;
         }
         
-        .meal {
+        .meal-slot {
             background: white;
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 10px;
-            border: 1px solid #e5e7eb;
+            border: 2px dashed #e5e7eb;
+            min-height: 80px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .meal-slot:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .meal-slot.filled {
+            border-style: solid;
+            border-color: #667eea;
         }
         
         .meal-type {
@@ -203,6 +308,14 @@
             font-size: 1.1em;
             font-weight: 500;
             margin-bottom: 8px;
+        }
+        
+        .add-meal-btn {
+            color: #667eea;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         /* Grocery List */
@@ -236,6 +349,7 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
+            margin-right: 12px;
         }
         
         .grocery-item.checked {
@@ -259,7 +373,157 @@
             margin-top: 20px;
         }
         
-        /* Restaurant Finder */
+        /* Buttons */
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #10b981;
+        }
+        
+        .btn-secondary:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        /* Form Elements */
+        input[type="text"], 
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Loading & Error States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #10b981;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #667eea;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .close-modal:hover {
+            color: #374151;
+        }
+        
+        /* Search */
         .search-box {
             margin-bottom: 20px;
         }
@@ -270,14 +534,9 @@
             border: 2px solid #e5e7eb;
             border-radius: 10px;
             font-size: 1em;
-            transition: border-color 0.3s;
         }
         
-        .search-box input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
+        /* Restaurant Cards */
         .restaurant-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -298,118 +557,55 @@
             font-weight: 600;
             margin-bottom: 8px;
         }
-        
-        .restaurant-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-        
-        .restaurant-tag {
-            background: #f0f4ff;
-            color: #667eea;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
-        }
-        
-        .restaurant-distance {
-            color: #6b7280;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-        
-        /* Airtable Connection */
-        .airtable-connect {
-            background: #fef3c7;
-            border: 2px solid #fbbf24;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .airtable-connect h3 {
-            color: #92400e;
-            margin-bottom: 10px;
-        }
-        
-        .airtable-connect input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #fbbf24;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        
-        .btn {
-            background: #667eea;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: #10b981;
-        }
-        
-        .btn-secondary:hover {
-            background: #059669;
-        }
-
-        .location-input {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .location-input input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌱 Smart Meal Planner</h1>
-        <p class="subtitle">Personalized nutrition planning with smart features</p>
+        <p class="subtitle">Powered by Airtable - Your personalized nutrition hub</p>
+        
+        <!-- Connection Status -->
+        <div id="connection-status" class="connection-status">
+            <span id="status-text">⚠️ Not connected to Airtable</span>
+            <button class="btn btn-secondary" onclick="openSettings()">Connect Now</button>
+        </div>
         
         <!-- Navigation Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('meals')">Weekly Meals</button>
+            <button class="tab active" onclick="switchTab('recipes')">Recipe Library</button>
+            <button class="tab" onclick="switchTab('planner')">Meal Planner</button>
             <button class="tab" onclick="switchTab('grocery')">Grocery List</button>
-            <button class="tab" onclick="switchTab('restaurants')">Find Restaurants</button>
+            <button class="tab" onclick="switchTab('restaurants')">Restaurants</button>
             <button class="tab" onclick="switchTab('settings')">Settings</button>
         </div>
         
-        <!-- Meals Tab -->
-        <div id="meals-tab" class="tab-content active">
+        <!-- Recipe Library Tab -->
+        <div id="recipes-tab" class="tab-content active">
+            <div class="search-box">
+                <input type="text" id="recipe-search" placeholder="Search recipes by name, ingredient, or tag..." 
+                       oninput="filterRecipes(this.value)">
+            </div>
+            
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>Filter by dietary preference:</label>
+                    <select id="diet-filter" onchange="filterRecipesByDiet(this.value)">
+                        <option value="all">All Recipes</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                        <option value="high-protein">High Protein</option>
+                        <option value="quick">Quick (Under 30 min)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="recipes-container" class="recipe-grid">
+                <div class="loading">Loading recipes from Airtable</div>
+            </div>
+        </div>
+        
+        <!-- Meal Planner Tab -->
+        <div id="planner-tab" class="tab-content">
             <div class="control-panel">
                 <div class="control-group">
                     <label>
@@ -417,12 +613,12 @@
                         <span class="slider-value" id="protein-value">85g</span>
                     </label>
                     <input type="range" id="protein-slider" min="50" max="150" value="85" 
-                           oninput="updateProtein(this.value)">
+                           oninput="updateProteinGoal(this.value)">
                 </div>
             </div>
             
-            <div id="meals-container">
-                <!-- Meals will be generated here -->
+            <div id="meal-plan-container">
+                <!-- Meal plan will be generated here -->
             </div>
         </div>
         
@@ -446,198 +642,512 @@
                 </div>
             </div>
             
+            <button class="btn" onclick="generateGroceryList()" style="margin-bottom: 20px;">
+                🛒 Generate List from Meal Plan
+            </button>
+            
             <div id="grocery-list">
-                <!-- Grocery list will be generated here -->
+                <div class="loading">Add meals to your planner to generate a grocery list</div>
             </div>
         </div>
         
         <!-- Restaurants Tab -->
         <div id="restaurants-tab" class="tab-content">
-            <div class="location-input">
-                <input type="text" id="location-input" placeholder="Enter your city or zip code" value="Los Angeles, CA">
-                <button class="btn" onclick="findRestaurants()">Search Nearby</button>
-            </div>
-            
             <div class="search-box">
-                <input type="text" id="restaurant-search" placeholder="Search by cuisine, dietary preference..." 
+                <input type="text" id="restaurant-search" placeholder="Search restaurants..." 
                        oninput="filterRestaurants(this.value)">
             </div>
             
+            <button class="btn btn-secondary" onclick="openAddRestaurant()" style="margin-bottom: 20px;">
+                ➕ Add Restaurant to Airtable
+            </button>
+            
             <div id="restaurants-container">
-                <!-- Restaurants will be displayed here -->
+                <div class="loading">Loading restaurants from Airtable</div>
             </div>
         </div>
         
         <!-- Settings Tab -->
         <div id="settings-tab" class="tab-content">
-            <div class="airtable-connect">
-                <h3>🔗 Connect to Airtable (Optional)</h3>
-                <p style="color: #92400e; margin-bottom: 15px;">
-                    Connect your Airtable base to sync recipes, meal plans, and restaurants
-                </p>
-                <input type="text" id="airtable-api-key" placeholder="Airtable API Key (starts with 'key...')">
-                <input type="text" id="airtable-base-id" placeholder="Base ID (starts with 'app...')">
-                <button class="btn btn-secondary" onclick="connectAirtable()">Connect Airtable</button>
-                <div id="connection-status" style="margin-top: 10px; color: #059669;"></div>
+            <div style="background: #f0f4ff; padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin-bottom: 15px;">🔗 Airtable Connection</h3>
+                
+                <div class="control-group">
+                    <label>API Key (Personal Access Token):</label>
+                    <input type="password" id="airtable-api-key" 
+                           placeholder="patXXXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXX"
+                           value="">
+                </div>
+                
+                <div class="control-group">
+                    <label>Base ID:</label>
+                    <input type="text" id="airtable-base-id" 
+                           placeholder="appXXXXXXXXXXXXXX"
+                           value="">
+                </div>
+                
+                <button class="btn btn-secondary" onclick="connectAirtable()">
+                    🔌 Connect to Airtable
+                </button>
+                
+                <button class="btn btn-danger" onclick="disconnectAirtable()" style="margin-left: 10px;">
+                    Disconnect
+                </button>
+                
+                <div id="connection-result" style="margin-top: 15px;"></div>
             </div>
             
-            <div style="background: #f9fafb; padding: 20px; border-radius: 10px; margin-top: 20px;">
-                <h3 style="margin-bottom: 15px;">How to get Airtable credentials:</h3>
-                <ol style="margin-left: 20px; line-height: 1.8; color: #374151;">
-                    <li>Go to <a href="https://airtable.com/account" target="_blank" style="color: #667eea;">airtable.com/account</a></li>
-                    <li>Under "API", click "Generate API key"</li>
-                    <li>Copy your API key</li>
-                    <li>Go to your base → Help → API documentation</li>
-                    <li>Copy the Base ID from the URL (starts with "app...")</li>
-                    <li>Paste both here and click Connect!</li>
-                </ol>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 10px;">
+                <h3 style="margin-bottom: 15px;">📋 Required Airtable Tables</h3>
+                <p style="margin-bottom: 15px; color: #374151;">
+                    Your Airtable base should have these tables for full functionality:
+                </p>
+                <ul style="margin-left: 20px; line-height: 1.8; color: #374151;">
+                    <li><strong>Recipes</strong> - Recipe Name, Category, Protein (g), Prep Time (min), Ingredients, Instructions, Tags</li>
+                    <li><strong>Meal Plans</strong> - Date, Day, Breakfast, Lunch, Dinner (linked to Recipes)</li>
+                    <li><strong>Restaurants</strong> - Name, Cuisine, Location, Dietary Options, Rating, Notes</li>
+                    <li><strong>Grocery Items</strong> - Item Name, Category, Price, Quantity</li>
+                </ul>
+                
+                <button class="btn" onclick="createSampleData()" style="margin-top: 20px;">
+                    📝 View Sample Data Structure
+                </button>
             </div>
         </div>
     </div>
     
+    <!-- Modal for Recipe Details -->
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-recipe-name">Recipe Details</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-recipe-content"></div>
+        </div>
+    </div>
+    
     <script>
-        // State management
-        let currentProteinGoal = 85;
-        let currentBudget = 'low';
-        let airtableConnected = false;
-        let airtableData = null;
-        
-        // Sample meal data (will be replaced by Airtable data if connected)
-        const sampleMeals = {
-            monday: {
-                breakfast: { name: "Greek Yogurt Protein Bowl", protein: 28, ingredients: ["Greek yogurt", "granola", "chia seeds", "banana", "almond butter"] },
-                lunch: { name: "Chickpea & Quinoa Buddha Bowl", protein: 30, ingredients: ["chickpeas", "quinoa", "spinach", "cucumber", "tahini"] },
-                dinner: { name: "Lentil Dal with Brown Rice", protein: 27, ingredients: ["red lentils", "brown rice", "coconut milk", "curry spices"] }
-            },
-            tuesday: {
-                breakfast: { name: "Protein Smoothie & Toast", protein: 32, ingredients: ["protein powder", "banana", "spinach", "peanut butter", "whole grain bread"] },
-                lunch: { name: "Black Bean Burrito Bowl", protein: 28, ingredients: ["black beans", "brown rice", "avocado", "cheese", "salsa"] },
-                dinner: { name: "Tofu Stir-Fry with Edamame", protein: 30, ingredients: ["tofu", "edamame", "mixed vegetables", "soy sauce", "rice"] }
-            },
-            wednesday: {
-                breakfast: { name: "Scrambled Eggs & Veggie Wrap", protein: 26, ingredients: ["eggs", "peppers", "onions", "cheese", "tortilla"] },
-                lunch: { name: "White Bean & Spinach Soup", protein: 28, ingredients: ["white beans", "spinach", "tomatoes", "vegetable broth", "bread"] },
-                dinner: { name: "Cottage Cheese Pasta Bowl", protein: 31, ingredients: ["pasta", "cottage cheese", "broccoli", "tomatoes", "parmesan"] }
-            },
-            thursday: {
-                breakfast: { name: "Protein Oatmeal", protein: 30, ingredients: ["oats", "protein powder", "berries", "walnuts", "Greek yogurt"] },
-                lunch: { name: "Caprese Panini with Lentil Soup", protein: 27, ingredients: ["mozzarella", "tomato", "pesto", "bread", "canned lentils"] },
-                dinner: { name: "Spicy Peanut Tempeh Bowl", protein: 31, ingredients: ["tempeh", "brown rice", "broccoli", "carrots", "peanut sauce"] }
-            },
-            friday: {
-                breakfast: { name: "Veggie Omelet", protein: 24, ingredients: ["eggs", "mushrooms", "spinach", "feta", "toast"] },
-                lunch: { name: "Loaded Hummus Plate", protein: 26, ingredients: ["hummus", "chickpeas", "cucumber", "feta", "pita bread"] },
-                dinner: { name: "Bean & Cheese Quesadillas", protein: 32, ingredients: ["black beans", "cheese", "peppers", "tortillas", "sour cream"] }
-            },
-            saturday: {
-                breakfast: { name: "Protein Pancakes", protein: 28, ingredients: ["cottage cheese", "eggs", "oats", "Greek yogurt", "berries"] },
-                lunch: { name: "Mediterranean Couscous Bowl", protein: 27, ingredients: ["couscous", "chickpeas", "cucumber", "feta", "olives"] },
-                dinner: { name: "Veggie Chili", protein: 31, ingredients: ["kidney beans", "black beans", "pinto beans", "tomatoes", "cornbread"] }
-            },
-            sunday: {
-                breakfast: { name: "Breakfast Burrito", protein: 28, ingredients: ["eggs", "black beans", "cheese", "avocado", "tortilla"] },
-                lunch: { name: "Greek Salad with Chickpeas", protein: 26, ingredients: ["chickpeas", "cucumber", "tomatoes", "feta", "pita bread"] },
-                dinner: { name: "Baked Falafel Bowl", protein: 30, ingredients: ["chickpeas", "quinoa", "tahini", "vegetables"] }
-            }
+        // Global state
+        let state = {
+            connected: false,
+            apiKey: '',
+            baseId: '',
+            recipes: [],
+            mealPlan: {},
+            restaurants: [],
+            groceryItems: [],
+            proteinGoal: 85,
+            budget: 'low'
         };
         
-        // Grocery items with prices
-        const groceryItems = {
-            low: [
-                { name: "Dried beans & lentils (2 lbs)", price: 8, category: "Proteins" },
-                { name: "Eggs (2 dozen)", price: 7, category: "Proteins" },
-                { name: "Greek yogurt (32 oz)", price: 6, category: "Proteins" },
-                { name: "Tofu (2 blocks)", price: 6, category: "Proteins" },
-                { name: "Rice & quinoa (3 lbs)", price: 9, category: "Grains" },
-                { name: "Whole grain bread", price: 4, category: "Grains" },
-                { name: "Oats (large container)", price: 5, category: "Grains" },
-                { name: "Frozen vegetables (3 bags)", price: 9, category: "Vegetables" },
-                { name: "Spinach & lettuce", price: 6, category: "Vegetables" },
-                { name: "Tomatoes, cucumbers, peppers", price: 8, category: "Vegetables" },
-                { name: "Bananas & seasonal fruit", price: 7, category: "Fruits" },
-                { name: "Peanut butter", price: 4, category: "Pantry" },
-                { name: "Olive oil & spices", price: 8, category: "Pantry" }
-            ],
-            medium: [
-                { name: "Dried beans & lentils (3 lbs)", price: 12, category: "Proteins" },
-                { name: "Eggs (2 dozen, organic)", price: 10, category: "Proteins" },
-                { name: "Greek yogurt (48 oz)", price: 9, category: "Proteins" },
-                { name: "Tofu & tempeh", price: 10, category: "Proteins" },
-                { name: "Cottage cheese", price: 6, category: "Proteins" },
-                { name: "Rice, quinoa & couscous", price: 12, category: "Grains" },
-                { name: "Whole grain bread & tortillas", price: 8, category: "Grains" },
-                { name: "Oats & granola", price: 9, category: "Grains" },
-                { name: "Fresh & frozen vegetables", price: 15, category: "Vegetables" },
-                { name: "Salad greens & herbs", price: 8, category: "Vegetables" },
-                { name: "Fresh fruits & berries", price: 12, category: "Fruits" },
-                { name: "Nut butters & nuts", price: 10, category: "Pantry" },
-                { name: "Avocados (4)", price: 6, category: "Pantry" },
-                { name: "Cheese variety", price: 10, category: "Pantry" }
-            ],
-            high: [
-                { name: "Organic beans & lentils (4 lbs)", price: 18, category: "Proteins" },
-                { name: "Eggs (3 dozen, pasture-raised)", price: 18, category: "Proteins" },
-                { name: "Greek yogurt (64 oz, organic)", price: 14, category: "Proteins" },
-                { name: "Organic tofu & tempeh", price: 15, category: "Proteins" },
-                { name: "Cottage cheese (organic)", price: 8, category: "Proteins" },
-                { name: "Protein powder", price: 12, category: "Proteins" },
-                { name: "Organic grains variety", price: 18, category: "Grains" },
-                { name: "Artisan bread & tortillas", price: 12, category: "Grains" },
-                { name: "Premium granola & oats", price: 12, category: "Grains" },
-                { name: "Organic fresh vegetables", price: 22, category: "Vegetables" },
-                { name: "Premium salad greens & herbs", price: 12, category: "Vegetables" },
-                { name: "Organic fruits & berries", price: 18, category: "Fruits" },
-                { name: "Specialty nut butters & nuts", price: 16, category: "Pantry" },
-                { name: "Organic avocados (6)", price: 10, category: "Pantry" },
-                { name: "Artisan cheese variety", price: 15, category: "Pantry" },
-                { name: "Specialty sauces & oils", price: 12, category: "Pantry" }
-            ]
-        };
-        
-        // Sample restaurants
-        const sampleRestaurants = [
-            {
-                name: "Green Leaf Cafe",
-                cuisine: "Vegetarian",
-                distance: "0.5 mi",
-                tags: ["High-Protein", "Vegan Options", "Quick Service"],
-                description: "Fresh bowls, salads, and protein-packed meals"
-            },
-            {
-                name: "The Protein Kitchen",
-                cuisine: "Health Food",
-                distance: "0.8 mi",
-                tags: ["High-Protein", "Meal Prep", "Budget-Friendly"],
-                description: "Build-your-own bowls with plant-based proteins"
-            },
-            {
-                name: "Zen Garden",
-                cuisine: "Asian Fusion",
-                distance: "1.2 mi",
-                tags: ["Vegetarian", "Tofu Specialties", "Fresh Ingredients"],
-                description: "Authentic tofu and vegetable dishes"
-            },
-            {
-                name: "Mediterranean Bowls",
-                cuisine: "Mediterranean",
-                distance: "0.6 mi",
-                tags: ["High-Protein", "Chickpea Bowls", "Fresh & Healthy"],
-                description: "Falafel, hummus, and grain bowls"
-            },
-            {
-                name: "Whole Foods Market",
-                cuisine: "Grocery/Deli",
-                distance: "1.0 mi",
-                tags: ["Vegetarian", "Organic", "Hot Bar"],
-                description: "Prepared vegetarian meals and salad bar"
-            }
-        ];
-        
-        // Initialize
+        // Initialize app
         function init() {
-            renderMeals();
-            renderGroceryList();
-            renderRestaurants();
+            loadSavedCredentials();
+            if (state.connected) {
+                fetchAllData();
+            } else {
+                showSampleData();
+            }
+            renderMealPlan();
+        }
+        
+        // Load saved credentials from localStorage
+        function loadSavedCredentials() {
+            const apiKey = localStorage.getItem('airtable-api-key');
+            const baseId = localStorage.getItem('airtable-base-id');
+            
+            if (apiKey && baseId) {
+                state.apiKey = apiKey;
+                state.baseId = baseId;
+                state.connected = true;
+                
+                document.getElementById('airtable-api-key').value = apiKey;
+                document.getElementById('airtable-base-id').value = baseId;
+                
+                updateConnectionStatus(true, 'Connected to Airtable');
+            }
+        }
+        
+        // Connect to Airtable
+        async function connectAirtable() {
+            const apiKey = document.getElementById('airtable-api-key').value.trim();
+            const baseId = document.getElementById('airtable-base-id').value.trim();
+            const resultDiv = document.getElementById('connection-result');
+            
+            if (!apiKey || !baseId) {
+                resultDiv.innerHTML = '<div class="error">Please enter both API key and Base ID</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading">Testing connection</div>';
+            
+            try {
+                // Test connection by fetching recipes
+                const response = await fetch(`https://api.airtable.com/v0/${baseId}/Recipes?maxRecords=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+                
+                if (response.ok) {
+                    state.apiKey = apiKey;
+                    state.baseId = baseId;
+                    state.connected = true;
+                    
+                    localStorage.setItem('airtable-api-key', apiKey);
+                    localStorage.setItem('airtable-base-id', baseId);
+                    
+                    resultDiv.innerHTML = '<div class="success">✅ Successfully connected to Airtable!</div>';
+                    updateConnectionStatus(true, 'Connected to Airtable');
+                    
+                    // Fetch all data
+                    await fetchAllData();
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">❌ Connection failed: ${error.error.message || 'Invalid credentials'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Connection error: ${error.message}</div>`;
+            }
+        }
+        
+        // Disconnect from Airtable
+        function disconnectAirtable() {
+            if (confirm('Are you sure you want to disconnect from Airtable?')) {
+                state.connected = false;
+                state.apiKey = '';
+                state.baseId = '';
+                
+                localStorage.removeItem('airtable-api-key');
+                localStorage.removeItem('airtable-base-id');
+                
+                document.getElementById('airtable-api-key').value = '';
+                document.getElementById('airtable-base-id').value = '';
+                document.getElementById('connection-result').innerHTML = '<div class="success">Disconnected from Airtable</div>';
+                
+                updateConnectionStatus(false, 'Not connected to Airtable');
+                showSampleData();
+            }
+        }
+        
+        // Update connection status banner
+        function updateConnectionStatus(connected, message) {
+            const statusDiv = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            
+            statusText.textContent = connected ? `✅ ${message}` : `⚠️ ${message}`;
+            statusDiv.className = connected ? 'connection-status connected' : 'connection-status';
+            
+            if (connected) {
+                statusDiv.querySelector('button').textContent = 'Settings';
+            }
+        }
+        
+        // Fetch all data from Airtable
+        async function fetchAllData() {
+            await Promise.all([
+                fetchRecipes(),
+                fetchRestaurants()
+            ]);
+        }
+        
+        // Fetch recipes from Airtable
+        async function fetchRecipes() {
+            const container = document.getElementById('recipes-container');
+            container.innerHTML = '<div class="loading">Loading recipes from Airtable</div>';
+            
+            try {
+                const response = await fetch(`https://api.airtable.com/v0/${state.baseId}/Recipes`, {
+                    headers: {
+                        'Authorization': `Bearer ${state.apiKey}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    state.recipes = data.records.map(record => ({
+                        id: record.id,
+                        name: record.fields['Recipe Name'] || record.fields.Name || 'Unnamed Recipe',
+                        category: record.fields.Category || 'Other',
+                        protein: record.fields['Protein (g)'] || record.fields.Protein || 0,
+                        prepTime: record.fields['Prep Time (min)'] || record.fields['Prep Time'] || 0,
+                        ingredients: record.fields.Ingredients || '',
+                        instructions: record.fields.Instructions || '',
+                        tags: record.fields.Tags || []
+                    }));
+                    
+                    renderRecipes(state.recipes);
+                } else {
+                    container.innerHTML = '<div class="error">Failed to load recipes. Check your Airtable table name is "Recipes"</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading recipes: ${error.message}</div>`;
+            }
+        }
+        
+        // Fetch restaurants from Airtable
+        async function fetchRestaurants() {
+            const container = document.getElementById('restaurants-container');
+            container.innerHTML = '<div class="loading">Loading restaurants from Airtable</div>';
+            
+            try {
+                const response = await fetch(`https://api.airtable.com/v0/${state.baseId}/Restaurants`, {
+                    headers: {
+                        'Authorization': `Bearer ${state.apiKey}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    state.restaurants = data.records.map(record => ({
+                        id: record.id,
+                        name: record.fields.Name || 'Unnamed Restaurant',
+                        cuisine: record.fields.Cuisine || 'Various',
+                        location: record.fields.Location || '',
+                        dietaryOptions: record.fields['Dietary Options'] || [],
+                        rating: record.fields.Rating || 0,
+                        notes: record.fields.Notes || ''
+                    }));
+                    
+                    renderRestaurants(state.restaurants);
+                } else {
+                    container.innerHTML = '<div class="error">No restaurants table found. You can add one in Airtable!</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading restaurants: ${error.message}</div>`;
+            }
+        }
+        
+        // Render recipes
+        function renderRecipes(recipes) {
+            const container = document.getElementById('recipes-container');
+            
+            if (!recipes || recipes.length === 0) {
+                container.innerHTML = '<div class="loading">No recipes found. Add some in your Airtable base!</div>';
+                return;
+            }
+            
+            container.innerHTML = recipes.map(recipe => `
+                <div class="recipe-card" onclick="showRecipeDetails('${recipe.id}')">
+                    <h3>${recipe.name}</h3>
+                    <div class="recipe-tags">
+                        <span class="recipe-tag">${recipe.category}</span>
+                        ${Array.isArray(recipe.tags) ? recipe.tags.map(tag => 
+                            `<span class="recipe-tag">${tag}</span>`
+                        ).join('') : ''}
+                    </div>
+                    <div class="recipe-stats">
+                        <div class="recipe-stat">
+                            <div class="recipe-stat-label">Protein</div>
+                            <div class="recipe-stat-value">${recipe.protein}g</div>
+                        </div>
+                        <div class="recipe-stat">
+                            <div class="recipe-stat-label">Prep Time</div>
+                            <div class="recipe-stat-value">${recipe.prepTime} min</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Render restaurants
+        function renderRestaurants(restaurants) {
+            const container = document.getElementById('restaurants-container');
+            
+            if (!restaurants || restaurants.length === 0) {
+                container.innerHTML = '<div class="loading">No restaurants found. Add some in your Airtable base!</div>';
+                return;
+            }
+            
+            container.innerHTML = restaurants.map(restaurant => `
+                <div class="restaurant-card">
+                    <div class="restaurant-name">${restaurant.name}</div>
+                    <div style="color: #6b7280; margin: 5px 0;">${restaurant.cuisine}</div>
+                    <div style="color: #374151; margin: 8px 0;">${restaurant.notes}</div>
+                    ${restaurant.location ? `<div style="color: #6b7280; font-size: 0.9em;">📍 ${restaurant.location}</div>` : ''}
+                    <div class="recipe-tags" style="margin-top: 10px;">
+                        ${Array.isArray(restaurant.dietaryOptions) ? restaurant.dietaryOptions.map(opt => 
+                            `<span class="recipe-tag">${opt}</span>`
+                        ).join('') : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Show sample data when not connected
+        function showSampleData() {
+            // Sample recipes
+            state.recipes = [
+                {
+                    id: 'sample1',
+                    name: 'Greek Yogurt Protein Bowl',
+                    category: 'Breakfast',
+                    protein: 28,
+                    prepTime: 5,
+                    ingredients: 'Greek yogurt, granola, chia seeds, banana, almond butter',
+                    instructions: 'Layer yogurt in bowl, top with granola, chia seeds, sliced banana, and drizzle with almond butter',
+                    tags: ['High-Protein', 'Quick', 'Vegetarian']
+                },
+                {
+                    id: 'sample2',
+                    name: 'Chickpea Buddha Bowl',
+                    category: 'Lunch',
+                    protein: 30,
+                    prepTime: 25,
+                    ingredients: 'Chickpeas, quinoa, spinach, cucumber, tahini',
+                    instructions: 'Roast chickpeas, cook quinoa, assemble with fresh vegetables and drizzle with tahini',
+                    tags: ['High-Protein', 'Vegan', 'Budget-Friendly']
+                },
+                {
+                    id: 'sample3',
+                    name: 'Lentil Dal',
+                    category: 'Dinner',
+                    protein: 27,
+                    prepTime: 30,
+                    ingredients: 'Red lentils, coconut milk, curry spices, brown rice',
+                    instructions: 'Cook lentils with spices and coconut milk, serve over brown rice',
+                    tags: ['High-Protein', 'Vegan', 'Budget-Friendly']
+                }
+            ];
+            
+            renderRecipes(state.recipes);
+            
+            // Sample restaurants
+            state.restaurants = [
+                {
+                    id: 'rest1',
+                    name: 'Green Leaf Cafe',
+                    cuisine: 'Vegetarian',
+                    location: '0.5 mi away',
+                    dietaryOptions: ['High-Protein', 'Vegan Options'],
+                    notes: 'Fresh bowls and protein-packed meals'
+                }
+            ];
+            
+            renderRestaurants(state.restaurants);
+        }
+        
+        // Render meal plan
+        function renderMealPlan() {
+            const container = document.getElementById('meal-plan-container');
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            container.innerHTML = days.map(day => {
+                const dayMeals = state.mealPlan[day] || {};
+                const totalProtein = (dayMeals.breakfast?.protein || 0) + 
+                                   (dayMeals.lunch?.protein || 0) + 
+                                   (dayMeals.dinner?.protein || 0);
+                
+                return `
+                    <div class="day-card">
+                        <div class="day-header">
+                            <div class="day-name">${day}</div>
+                            <div class="protein-badge">${totalProtein}g protein</div>
+                        </div>
+                        ${renderMealSlot(day, 'breakfast', dayMeals.breakfast)}
+                        ${renderMealSlot(day, 'lunch', dayMeals.lunch)}
+                        ${renderMealSlot(day, 'dinner', dayMeals.dinner)}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render individual meal slot
+        function renderMealSlot(day, mealType, meal) {
+            if (meal) {
+                return `
+                    <div class="meal-slot filled">
+                        <div class="meal-type">${mealType}</div>
+                        <div class="meal-name">${meal.name}</div>
+                        <div style="color: #6b7280; font-size: 0.9em;">${meal.protein}g protein</div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="meal-slot" onclick="selectMealForSlot('${day}', '${mealType}')">
+                        <div class="meal-type">${mealType}</div>
+                        <div class="add-meal-btn">➕ Add meal</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Filter recipes
+        function filterRecipes(searchTerm) {
+            const filtered = state.recipes.filter(recipe => {
+                const search = searchTerm.toLowerCase();
+                return recipe.name.toLowerCase().includes(search) ||
+                       recipe.ingredients.toLowerCase().includes(search) ||
+                       (Array.isArray(recipe.tags) && recipe.tags.some(tag => tag.toLowerCase().includes(search)));
+            });
+            
+            renderRecipes(filtered);
+        }
+        
+        // Filter recipes by diet
+        function filterRecipesByDiet(diet) {
+            if (diet === 'all') {
+                renderRecipes(state.recipes);
+                return;
+            }
+            
+            const filtered = state.recipes.filter(recipe => {
+                if (!Array.isArray(recipe.tags)) return false;
+                
+                if (diet === 'vegetarian') return recipe.tags.includes('Vegetarian') || recipe.tags.includes('Vegan');
+                if (diet === 'vegan') return recipe.tags.includes('Vegan');
+                if (diet === 'high-protein') return recipe.protein >= 25;
+                if (diet === 'quick') return recipe.prepTime <= 30;
+                
+                return false;
+            });
+            
+            renderRecipes(filtered);
+        }
+        
+        // Filter restaurants
+        function filterRestaurants(searchTerm) {
+            const filtered = state.restaurants.filter(restaurant => {
+                const search = searchTerm.toLowerCase();
+                return restaurant.name.toLowerCase().includes(search) ||
+                       restaurant.cuisine.toLowerCase().includes(search) ||
+                       (Array.isArray(restaurant.dietaryOptions) && 
+                        restaurant.dietaryOptions.some(opt => opt.toLowerCase().includes(search)));
+            });
+            
+            renderRestaurants(filtered);
+        }
+        
+        // Show recipe details in modal
+        function showRecipeDetails(recipeId) {
+            const recipe = state.recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            document.getElementById('modal-recipe-name').textContent = recipe.name;
+            document.getElementById('modal-recipe-content').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <strong>Category:</strong> ${recipe.category}<br>
+                    <strong>Protein:</strong> ${recipe.protein}g<br>
+                    <strong>Prep Time:</strong> ${recipe.prepTime} minutes
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">Ingredients:</h4>
+                    <p style="white-space: pre-line;">${recipe.ingredients}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">Instructions:</h4>
+                    <p style="white-space: pre-line;">${recipe.instructions}</p>
+                </div>
+                <button class="btn" onclick="closeModal()">Close</button>
+            `;
+            
+            document.getElementById('recipe-modal').classList.add('active');
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('recipe-modal').classList.remove('active');
         }
         
         // Tab switching
@@ -650,202 +1160,97 @@
         }
         
         // Update protein goal
-        function updateProtein(value) {
-            currentProteinGoal = parseInt(value);
+        function updateProteinGoal(value) {
+            state.proteinGoal = parseInt(value);
             document.getElementById('protein-value').textContent = value + 'g';
-            renderMeals();
         }
         
         // Set budget
         function setBudget(budget, element) {
-            currentBudget = budget;
+            state.budget = budget;
             document.querySelectorAll('.budget-option').forEach(opt => opt.classList.remove('active'));
             element.classList.add('active');
-            renderGroceryList();
         }
         
-        // Render meals
-        function renderMeals() {
-            const container = document.getElementById('meals-container');
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            
-            let html = '';
-            days.forEach((day, index) => {
-                const dayKey = day.toLowerCase();
-                const meals = sampleMeals[dayKey];
-                const totalProtein = meals.breakfast.protein + meals.lunch.protein + meals.dinner.protein;
-                
-                html += `
-                    <div class="day-card">
-                        <div class="day-header">
-                            <div class="day-name">${day}</div>
-                            <div class="protein-badge">${totalProtein}g protein</div>
-                        </div>
-                        <div class="meal">
-                            <div class="meal-type">Breakfast</div>
-                            <div class="meal-name">${meals.breakfast.name}</div>
-                            <div style="color: #6b7280; font-size: 0.9em;">${meals.breakfast.protein}g protein</div>
-                        </div>
-                        <div class="meal">
-                            <div class="meal-type">Lunch</div>
-                            <div class="meal-name">${meals.lunch.name}</div>
-                            <div style="color: #6b7280; font-size: 0.9em;">${meals.lunch.protein}g protein</div>
-                        </div>
-                        <div class="meal">
-                            <div class="meal-type">Dinner</div>
-                            <div class="meal-name">${meals.dinner.name}</div>
-                            <div style="color: #6b7280; font-size: 0.9em;">${meals.dinner.protein}g protein</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-        
-        // Render grocery list
-        function renderGroceryList() {
+        // Generate grocery list
+        function generateGroceryList() {
             const container = document.getElementById('grocery-list');
-            const items = groceryItems[currentBudget];
             
-            const categories = [...new Set(items.map(item => item.category))];
-            let html = '';
-            let totalCost = 0;
+            // Check if there are meals planned
+            const hasMeals = Object.values(state.mealPlan).some(day => 
+                day.breakfast || day.lunch || day.dinner
+            );
             
-            categories.forEach(category => {
-                const categoryItems = items.filter(item => item.category === category);
-                
-                html += `
-                    <div class="grocery-section">
-                        <h3>${category}</h3>
-                        <div class="grocery-items">
-                `;
-                
-                categoryItems.forEach((item, index) => {
-                    totalCost += item.price;
-                    html += `
-                        <div class="grocery-item" id="item-${category}-${index}">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <input type="checkbox" onchange="toggleItem('item-${category}-${index}')">
-                                <span>${item.name}</span>
-                            </div>
-                            <span class="item-price">$${item.price}</span>
-                        </div>
-                    `;
+            if (!hasMeals) {
+                container.innerHTML = '<div class="error">Please add meals to your planner first!</div>';
+                return;
+            }
+            
+            // Collect all ingredients from planned meals
+            const ingredients = new Set();
+            Object.values(state.mealPlan).forEach(day => {
+                ['breakfast', 'lunch', 'dinner'].forEach(mealType => {
+                    if (day[mealType]) {
+                        const recipe = state.recipes.find(r => r.id === day[mealType].id);
+                        if (recipe && recipe.ingredients) {
+                            recipe.ingredients.split(',').forEach(ing => {
+                                ingredients.add(ing.trim());
+                            });
+                        }
+                    }
                 });
-                
-                html += `
-                        </div>
-                    </div>
-                `;
             });
             
-            html += `<div class="total-cost">Total Weekly Cost: $${totalCost}</div>`;
-            container.innerHTML = html;
+            if (ingredients.size === 0) {
+                container.innerHTML = '<div class="error">No ingredients found in your planned meals</div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="grocery-section">
+                    <h3>Your Weekly Grocery List</h3>
+                    <div class="grocery-items">
+                        ${Array.from(ingredients).map((item, index) => `
+                            <div class="grocery-item" id="grocery-${index}">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="checkbox" onchange="toggleGroceryItem('grocery-${index}')">
+                                    <span>${item}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="success" style="margin-top: 20px;">
+                    ✅ Generated ${ingredients.size} items from your meal plan!
+                </div>
+            `;
         }
         
         // Toggle grocery item
-        function toggleItem(itemId) {
+        function toggleGroceryItem(itemId) {
             const item = document.getElementById(itemId);
             item.classList.toggle('checked');
         }
         
-        // Render restaurants
-        function renderRestaurants(restaurants = sampleRestaurants) {
-            const container = document.getElementById('restaurants-container');
-            
-            let html = '';
-            restaurants.forEach(restaurant => {
-                html += `
-                    <div class="restaurant-card">
-                        <div class="restaurant-name">${restaurant.name}</div>
-                        <div style="color: #6b7280; margin: 5px 0;">${restaurant.cuisine}</div>
-                        <div style="color: #374151; margin: 8px 0;">${restaurant.description}</div>
-                        <div class="restaurant-distance">📍 ${restaurant.distance}</div>
-                        <div class="restaurant-tags">
-                            ${restaurant.tags.map(tag => `<span class="restaurant-tag">${tag}</span>`).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html || '<div class="loading">No restaurants found. Try a different search.</div>';
+        // Select meal for slot (simplified - in production would show recipe picker)
+        function selectMealForSlot(day, mealType) {
+            alert(`Click on a recipe in the Recipe Library tab, then we'll add it to ${day} ${mealType}!\n\n(This is a demo - full version would have a recipe picker)`);
         }
         
-        // Filter restaurants
-        function filterRestaurants(searchTerm) {
-            if (!searchTerm) {
-                renderRestaurants();
-                return;
-            }
-            
-            const filtered = sampleRestaurants.filter(restaurant => {
-                return restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       restaurant.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-            });
-            
-            renderRestaurants(filtered);
+        // Open settings tab
+        function openSettings() {
+            switchTab('settings');
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab')[4].classList.add('active');
         }
         
-        // Find restaurants (placeholder for real API integration)
-        function findRestaurants() {
-            const location = document.getElementById('location-input').value;
-            const container = document.getElementById('restaurants-container');
-            
-            container.innerHTML = '<div class="loading">🔍 Searching for restaurants near ' + location + '...</div>';
-            
-            // Simulate API call
-            setTimeout(() => {
-                renderRestaurants();
-            }, 1000);
-        }
-        
-        // Connect to Airtable
-        async function connectAirtable() {
-            const apiKey = document.getElementById('airtable-api-key').value;
-            const baseId = document.getElementById('airtable-base-id').value;
-            const statusDiv = document.getElementById('connection-status');
-            
-            if (!apiKey || !baseId) {
-                statusDiv.textContent = '❌ Please enter both API key and Base ID';
-                statusDiv.style.color = '#c33';
-                return;
-            }
-            
-            statusDiv.textContent = '⏳ Connecting to Airtable...';
-            statusDiv.style.color = '#92400e';
-            
-            // This is a placeholder - in production you'd make actual API calls
-            setTimeout(() => {
-                airtableConnected = true;
-                statusDiv.textContent = '✅ Connected! Your data will sync automatically.';
-                statusDiv.style.color = '#059669';
-                
-                // Store credentials in localStorage
-                localStorage.setItem('airtable-api-key', apiKey);
-                localStorage.setItem('airtable-base-id', baseId);
-            }, 1500);
-        }
-        
-        // Load saved Airtable credentials
-        function loadAirtableCredentials() {
-            const apiKey = localStorage.getItem('airtable-api-key');
-            const baseId = localStorage.getItem('airtable-base-id');
-            
-            if (apiKey && baseId) {
-                document.getElementById('airtable-api-key').value = apiKey;
-                document.getElementById('airtable-base-id').value = baseId;
-                document.getElementById('connection-status').textContent = '✅ Previously connected';
-                document.getElementById('connection-status').style.color = '#059669';
-            }
+        // Create sample data structure guide
+        function createSampleData() {
+            alert(`Sample Airtable Structure:\n\nRecipes Table:\n- Recipe Name (Single line text)\n- Category (Single select: Breakfast, Lunch, Dinner, Snack)\n- Protein (g) (Number)\n- Prep Time (min) (Number)\n- Ingredients (Long text)\n- Instructions (Long text)\n- Tags (Multiple select: Vegetarian, Vegan, High-Protein, Quick, Budget-Friendly)\n\nRestaurants Table:\n- Name (Single line text)\n- Cuisine (Single line text)\n- Location (Single line text)\n- Dietary Options (Multiple select)\n- Rating (Rating)\n- Notes (Long text)`);
         }
         
         // Initialize on load
-        window.onload = function() {
-            init();
-            loadAirtableCredentials();
-        };
+        window.onload = init;
     </script>
 </body>
 </html>
