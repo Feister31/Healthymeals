@@ -866,16 +866,25 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    state.recipes = data.records.map(record => ({
-                        id: record.id,
-                        name: record.fields['Recipe Name'] || record.fields.Name || 'Unnamed Recipe',
-                        category: record.fields.Category || 'Other',
-                        protein: record.fields['Protein (g)'] || record.fields.Protein || 0,
-                        prepTime: record.fields['Prep Time (min)'] || record.fields['Prep Time'] || 0,
-                        ingredients: record.fields.Ingredients || '',
-                        instructions: record.fields.Instructions || '',
-                        tags: record.fields.Tags || []
-                    }));
+                    state.recipes = data.records.map(record => {
+                        // Get protein value - try different possible field names
+                        let proteinValue = record.fields['Protein (g)'] || 
+                                          record.fields['Protein'] || 
+                                          record.fields['Protein(g)'] || 
+                                          record.fields['Protein Content'] || 
+                                          20; // default fallback
+                        
+                        return {
+                            id: record.id,
+                            name: record.fields['Recipe Name'] || record.fields.Name || 'Unnamed Recipe',
+                            category: record.fields['Cuisine Type'] || record.fields.Category || 'Other',
+                            protein: typeof proteinValue === 'number' ? proteinValue : parseInt(proteinValue) || 20,
+                            prepTime: record.fields['Cooking Time (minutes)'] || record.fields['Cooking Time'] || 30,
+                            ingredients: record.fields.Ingredients || '',
+                            instructions: record.fields['Preparation Instructions'] || record.fields.Instructions || record.fields['Preparation'] || '',
+                            tags: record.fields.Tags || (record.fields['Cuisine Type'] ? [record.fields['Cuisine Type']] : [])
+                        };
+                    });
                     
                     renderRecipes(state.recipes);
                 } else {
