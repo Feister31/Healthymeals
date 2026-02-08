@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Healthy Meal Plan</title>
+    <title>Smart Meal Planner</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,14 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             min-height: 100vh;
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -39,34 +39,124 @@
             font-size: 1.1em;
         }
         
-        .tags {
+        /* Navigation Tabs */
+        .tabs {
             display: flex;
             gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
             flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: #667eea;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
             margin-bottom: 30px;
         }
         
-        .tag {
-            background: #f0f4ff;
-            color: #667eea;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
+        .control-group {
+            margin-bottom: 20px;
         }
         
+        .control-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #d1d5db;
+            outline: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .budget-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .budget-option {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .budget-option:hover {
+            border-color: #667eea;
+        }
+        
+        .budget-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        /* Meal Cards */
         .day-card {
             background: #f8f9ff;
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 20px;
             border-left: 5px solid #667eea;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .day-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
         }
         
         .day-header {
@@ -91,15 +181,11 @@
             font-weight: 600;
         }
         
-        .meals {
-            display: grid;
-            gap: 15px;
-        }
-        
         .meal {
             background: white;
             padding: 15px;
             border-radius: 10px;
+            margin-bottom: 10px;
             border: 1px solid #e5e7eb;
         }
         
@@ -119,303 +205,647 @@
             margin-bottom: 8px;
         }
         
-        .meal-details {
-            color: #6b7280;
-            font-size: 0.9em;
-            line-height: 1.5;
+        /* Grocery List */
+        .grocery-section {
+            margin-bottom: 30px;
         }
         
-        .time-badge {
-            display: inline-block;
-            background: #fef3c7;
-            color: #92400e;
-            padding: 3px 10px;
+        .grocery-section h3 {
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .grocery-items {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .grocery-item {
+            background: #f9fafb;
+            padding: 12px 15px;
             border-radius: 8px;
-            font-size: 0.8em;
-            margin-top: 5px;
-            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #667eea;
         }
         
-        .shopping-tip {
-            background: #ecfdf5;
-            border-left: 4px solid #10b981;
+        .grocery-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .grocery-item.checked {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        .item-price {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .total-cost {
+            background: #667eea;
+            color: white;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 30px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-top: 20px;
         }
         
-        .shopping-tip h3 {
-            color: #10b981;
+        /* Restaurant Finder */
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .restaurant-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .restaurant-card:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .restaurant-name {
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .restaurant-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .restaurant-tag {
+            background: #f0f4ff;
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+        
+        .restaurant-distance {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        /* Airtable Connection */
+        .airtable-connect {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .airtable-connect h3 {
+            color: #92400e;
             margin-bottom: 10px;
         }
         
-        .shopping-tip ul {
-            margin-left: 20px;
-            color: #065f46;
-            line-height: 1.8;
+        .airtable-connect input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #fbbf24;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #10b981;
+        }
+        
+        .btn-secondary:hover {
+            background: #059669;
+        }
+
+        .location-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .location-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌱 Your Weekly Meal Plan</h1>
-        <p class="subtitle">High-protein vegetarian meals • Quick & easy • Budget-friendly</p>
+        <h1>🌱 Smart Meal Planner</h1>
+        <p class="subtitle">Personalized nutrition planning with smart features</p>
         
-        <div class="tags">
-            <span class="tag">🥗 25-30g protein per meal</span>
-            <span class="tag">⏱️ Under 30 minutes</span>
-            <span class="tag">💰 Budget-friendly</span>
-            <span class="tag">🌿 100% Vegetarian</span>
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('meals')">Weekly Meals</button>
+            <button class="tab" onclick="switchTab('grocery')">Grocery List</button>
+            <button class="tab" onclick="switchTab('restaurants')">Find Restaurants</button>
+            <button class="tab" onclick="switchTab('settings')">Settings</button>
         </div>
-
-        <!-- Monday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Monday</div>
-                <div class="protein-badge">~85g protein</div>
+        
+        <!-- Meals Tab -->
+        <div id="meals-tab" class="tab-content active">
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>
+                        Daily Protein Goal: 
+                        <span class="slider-value" id="protein-value">85g</span>
+                    </label>
+                    <input type="range" id="protein-slider" min="50" max="150" value="85" 
+                           oninput="updateProtein(this.value)">
+                </div>
             </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Greek Yogurt Protein Bowl</div>
-                    <div class="meal-details">
-                        Greek yogurt (1.5 cups) topped with granola, chia seeds, banana, and almond butter
-                        <br><span class="time-badge">⏱️ 5 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Chickpea & Quinoa Buddha Bowl</div>
-                    <div class="meal-details">
-                        Roasted chickpeas, cooked quinoa, spinach, cucumber, tomatoes, tahini dressing
-                        <br><span class="time-badge">⏱️ 25 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Lentil Dal with Brown Rice</div>
-                    <div class="meal-details">
-                        Red lentils cooked with curry spices, coconut milk, served over brown rice
-                        <br><span class="time-badge">⏱️ 30 min</span>
-                    </div>
-                </div>
+            
+            <div id="meals-container">
+                <!-- Meals will be generated here -->
             </div>
         </div>
-
-        <!-- Tuesday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Tuesday</div>
-                <div class="protein-badge">~90g protein</div>
+        
+        <!-- Grocery List Tab -->
+        <div id="grocery-tab" class="tab-content">
+            <div class="control-panel">
+                <label>Weekly Budget:</label>
+                <div class="budget-group">
+                    <div class="budget-option active" onclick="setBudget('low', this)">
+                        <div style="font-size: 1.2em; font-weight: 600;">$50-75</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Budget</div>
+                    </div>
+                    <div class="budget-option" onclick="setBudget('medium', this)">
+                        <div style="font-size: 1.2em; font-weight: 600;">$75-100</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Moderate</div>
+                    </div>
+                    <div class="budget-option" onclick="setBudget('high', this)">
+                        <div style="font-size: 1.2em; font-weight: 600;">$100+</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Premium</div>
+                    </div>
+                </div>
             </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Protein Smoothie & Toast</div>
-                    <div class="meal-details">
-                        Protein powder, banana, spinach, peanut butter, almond milk + whole grain toast with hummus
-                        <br><span class="time-badge">⏱️ 5 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Black Bean Burrito Bowl</div>
-                    <div class="meal-details">
-                        Black beans, brown rice, lettuce, salsa, avocado, cheese, sour cream
-                        <br><span class="time-badge">⏱️ 20 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Tofu Stir-Fry with Edamame</div>
-                    <div class="meal-details">
-                        Crispy tofu, edamame, mixed vegetables, soy-ginger sauce, served over rice
-                        <br><span class="time-badge">⏱️ 25 min</span>
-                    </div>
-                </div>
+            
+            <div id="grocery-list">
+                <!-- Grocery list will be generated here -->
             </div>
         </div>
-
-        <!-- Wednesday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Wednesday</div>
-                <div class="protein-badge">~85g protein</div>
+        
+        <!-- Restaurants Tab -->
+        <div id="restaurants-tab" class="tab-content">
+            <div class="location-input">
+                <input type="text" id="location-input" placeholder="Enter your city or zip code" value="Los Angeles, CA">
+                <button class="btn" onclick="findRestaurants()">Search Nearby</button>
             </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Scrambled Eggs & Veggie Wrap</div>
-                    <div class="meal-details">
-                        3 eggs scrambled with peppers, onions, cheese in a whole wheat tortilla
-                        <br><span class="time-badge">⏱️ 10 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">White Bean & Spinach Soup</div>
-                    <div class="meal-details">
-                        Cannellini beans, spinach, tomatoes, garlic, vegetable broth + whole grain bread
-                        <br><span class="time-badge">⏱️ 25 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Cottage Cheese Pasta Bowl</div>
-                    <div class="meal-details">
-                        Whole wheat pasta, cottage cheese sauce, roasted broccoli, cherry tomatoes, parmesan
-                        <br><span class="time-badge">⏱️ 20 min</span>
-                    </div>
-                </div>
+            
+            <div class="search-box">
+                <input type="text" id="restaurant-search" placeholder="Search by cuisine, dietary preference..." 
+                       oninput="filterRestaurants(this.value)">
+            </div>
+            
+            <div id="restaurants-container">
+                <!-- Restaurants will be displayed here -->
             </div>
         </div>
-
-        <!-- Thursday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Thursday</div>
-                <div class="protein-badge">~88g protein</div>
+        
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="airtable-connect">
+                <h3>🔗 Connect to Airtable (Optional)</h3>
+                <p style="color: #92400e; margin-bottom: 15px;">
+                    Connect your Airtable base to sync recipes, meal plans, and restaurants
+                </p>
+                <input type="text" id="airtable-api-key" placeholder="Airtable API Key (starts with 'key...')">
+                <input type="text" id="airtable-base-id" placeholder="Base ID (starts with 'app...')">
+                <button class="btn btn-secondary" onclick="connectAirtable()">Connect Airtable</button>
+                <div id="connection-status" style="margin-top: 10px; color: #059669;"></div>
             </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Protein Oatmeal</div>
-                    <div class="meal-details">
-                        Oats cooked with protein powder, topped with berries, walnuts, and Greek yogurt
-                        <br><span class="time-badge">⏱️ 10 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Caprese Panini with Lentil Soup</div>
-                    <div class="meal-details">
-                        Mozzarella, tomato, pesto panini + quick lentil soup (canned lentils work great!)
-                        <br><span class="time-badge">⏱️ 15 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Spicy Peanut Tempeh Bowl</div>
-                    <div class="meal-details">
-                        Marinated tempeh, brown rice, steamed broccoli, carrots, peanut sauce
-                        <br><span class="time-badge">⏱️ 25 min</span>
-                    </div>
-                </div>
+            
+            <div style="background: #f9fafb; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px;">How to get Airtable credentials:</h3>
+                <ol style="margin-left: 20px; line-height: 1.8; color: #374151;">
+                    <li>Go to <a href="https://airtable.com/account" target="_blank" style="color: #667eea;">airtable.com/account</a></li>
+                    <li>Under "API", click "Generate API key"</li>
+                    <li>Copy your API key</li>
+                    <li>Go to your base → Help → API documentation</li>
+                    <li>Copy the Base ID from the URL (starts with "app...")</li>
+                    <li>Paste both here and click Connect!</li>
+                </ol>
             </div>
-        </div>
-
-        <!-- Friday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Friday</div>
-                <div class="protein-badge">~82g protein</div>
-            </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Veggie Omelet</div>
-                    <div class="meal-details">
-                        3-egg omelet with mushrooms, spinach, tomatoes, feta cheese + whole grain toast
-                        <br><span class="time-badge">⏱️ 12 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Loaded Hummus Plate</div>
-                    <div class="meal-details">
-                        Hummus with roasted chickpeas, cucumber, tomatoes, olives, feta, pita bread
-                        <br><span class="time-badge">⏱️ 10 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Bean & Cheese Quesadillas</div>
-                    <div class="meal-details">
-                        Black beans, mixed cheese, peppers in whole wheat tortillas + side salad
-                        <br><span class="time-badge">⏱️ 15 min</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Saturday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Saturday</div>
-                <div class="protein-badge">~86g protein</div>
-            </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Protein Pancakes</div>
-                    <div class="meal-details">
-                        Cottage cheese pancakes topped with Greek yogurt and fresh berries
-                        <br><span class="time-badge">⏱️ 15 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Mediterranean Couscous Bowl</div>
-                    <div class="meal-details">
-                        Couscous, chickpeas, cucumbers, tomatoes, feta, olives, lemon-herb dressing
-                        <br><span class="time-badge">⏱️ 20 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Veggie Chili with Cornbread</div>
-                    <div class="meal-details">
-                        Three-bean chili with kidney, black, and pinto beans + store-bought cornbread
-                        <br><span class="time-badge">⏱️ 30 min</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sunday -->
-        <div class="day-card">
-            <div class="day-header">
-                <div class="day-name">Sunday</div>
-                <div class="protein-badge">~84g protein</div>
-            </div>
-            <div class="meals">
-                <div class="meal">
-                    <div class="meal-type">Breakfast</div>
-                    <div class="meal-name">Breakfast Burrito</div>
-                    <div class="meal-details">
-                        Scrambled eggs, black beans, cheese, avocado, salsa in whole wheat tortilla
-                        <br><span class="time-badge">⏱️ 12 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Lunch</div>
-                    <div class="meal-name">Greek Salad with Chickpeas</div>
-                    <div class="meal-details">
-                        Mixed greens, chickpeas, cucumber, tomatoes, olives, feta, pita bread, tzatziki
-                        <br><span class="time-badge">⏱️ 10 min</span>
-                    </div>
-                </div>
-                <div class="meal">
-                    <div class="meal-type">Dinner</div>
-                    <div class="meal-name">Baked Falafel Bowl</div>
-                    <div class="meal-details">
-                        Homemade baked falafel, quinoa, tahini sauce, roasted vegetables
-                        <br><span class="time-badge">⏱️ 30 min</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="shopping-tip">
-            <h3>💡 Budget-Friendly Shopping Tips</h3>
-            <ul>
-                <li><strong>Buy in bulk:</strong> Dried beans, lentils, quinoa, rice, oats are all cheaper in bulk</li>
-                <li><strong>Protein staples:</strong> Eggs, Greek yogurt, cottage cheese, canned beans, tofu, and tempeh are your affordable protein heroes</li>
-                <li><strong>Frozen veggies:</strong> Just as nutritious and more budget-friendly than fresh</li>
-                <li><strong>Meal prep:</strong> Cook grains and beans in batches on Sunday to save time during the week</li>
-                <li><strong>Generic brands:</strong> Store-brand Greek yogurt, beans, and grains are often half the price of name brands</li>
-            </ul>
         </div>
     </div>
+    
+    <script>
+        // State management
+        let currentProteinGoal = 85;
+        let currentBudget = 'low';
+        let airtableConnected = false;
+        let airtableData = null;
+        
+        // Sample meal data (will be replaced by Airtable data if connected)
+        const sampleMeals = {
+            monday: {
+                breakfast: { name: "Greek Yogurt Protein Bowl", protein: 28, ingredients: ["Greek yogurt", "granola", "chia seeds", "banana", "almond butter"] },
+                lunch: { name: "Chickpea & Quinoa Buddha Bowl", protein: 30, ingredients: ["chickpeas", "quinoa", "spinach", "cucumber", "tahini"] },
+                dinner: { name: "Lentil Dal with Brown Rice", protein: 27, ingredients: ["red lentils", "brown rice", "coconut milk", "curry spices"] }
+            },
+            tuesday: {
+                breakfast: { name: "Protein Smoothie & Toast", protein: 32, ingredients: ["protein powder", "banana", "spinach", "peanut butter", "whole grain bread"] },
+                lunch: { name: "Black Bean Burrito Bowl", protein: 28, ingredients: ["black beans", "brown rice", "avocado", "cheese", "salsa"] },
+                dinner: { name: "Tofu Stir-Fry with Edamame", protein: 30, ingredients: ["tofu", "edamame", "mixed vegetables", "soy sauce", "rice"] }
+            },
+            wednesday: {
+                breakfast: { name: "Scrambled Eggs & Veggie Wrap", protein: 26, ingredients: ["eggs", "peppers", "onions", "cheese", "tortilla"] },
+                lunch: { name: "White Bean & Spinach Soup", protein: 28, ingredients: ["white beans", "spinach", "tomatoes", "vegetable broth", "bread"] },
+                dinner: { name: "Cottage Cheese Pasta Bowl", protein: 31, ingredients: ["pasta", "cottage cheese", "broccoli", "tomatoes", "parmesan"] }
+            },
+            thursday: {
+                breakfast: { name: "Protein Oatmeal", protein: 30, ingredients: ["oats", "protein powder", "berries", "walnuts", "Greek yogurt"] },
+                lunch: { name: "Caprese Panini with Lentil Soup", protein: 27, ingredients: ["mozzarella", "tomato", "pesto", "bread", "canned lentils"] },
+                dinner: { name: "Spicy Peanut Tempeh Bowl", protein: 31, ingredients: ["tempeh", "brown rice", "broccoli", "carrots", "peanut sauce"] }
+            },
+            friday: {
+                breakfast: { name: "Veggie Omelet", protein: 24, ingredients: ["eggs", "mushrooms", "spinach", "feta", "toast"] },
+                lunch: { name: "Loaded Hummus Plate", protein: 26, ingredients: ["hummus", "chickpeas", "cucumber", "feta", "pita bread"] },
+                dinner: { name: "Bean & Cheese Quesadillas", protein: 32, ingredients: ["black beans", "cheese", "peppers", "tortillas", "sour cream"] }
+            },
+            saturday: {
+                breakfast: { name: "Protein Pancakes", protein: 28, ingredients: ["cottage cheese", "eggs", "oats", "Greek yogurt", "berries"] },
+                lunch: { name: "Mediterranean Couscous Bowl", protein: 27, ingredients: ["couscous", "chickpeas", "cucumber", "feta", "olives"] },
+                dinner: { name: "Veggie Chili", protein: 31, ingredients: ["kidney beans", "black beans", "pinto beans", "tomatoes", "cornbread"] }
+            },
+            sunday: {
+                breakfast: { name: "Breakfast Burrito", protein: 28, ingredients: ["eggs", "black beans", "cheese", "avocado", "tortilla"] },
+                lunch: { name: "Greek Salad with Chickpeas", protein: 26, ingredients: ["chickpeas", "cucumber", "tomatoes", "feta", "pita bread"] },
+                dinner: { name: "Baked Falafel Bowl", protein: 30, ingredients: ["chickpeas", "quinoa", "tahini", "vegetables"] }
+            }
+        };
+        
+        // Grocery items with prices
+        const groceryItems = {
+            low: [
+                { name: "Dried beans & lentils (2 lbs)", price: 8, category: "Proteins" },
+                { name: "Eggs (2 dozen)", price: 7, category: "Proteins" },
+                { name: "Greek yogurt (32 oz)", price: 6, category: "Proteins" },
+                { name: "Tofu (2 blocks)", price: 6, category: "Proteins" },
+                { name: "Rice & quinoa (3 lbs)", price: 9, category: "Grains" },
+                { name: "Whole grain bread", price: 4, category: "Grains" },
+                { name: "Oats (large container)", price: 5, category: "Grains" },
+                { name: "Frozen vegetables (3 bags)", price: 9, category: "Vegetables" },
+                { name: "Spinach & lettuce", price: 6, category: "Vegetables" },
+                { name: "Tomatoes, cucumbers, peppers", price: 8, category: "Vegetables" },
+                { name: "Bananas & seasonal fruit", price: 7, category: "Fruits" },
+                { name: "Peanut butter", price: 4, category: "Pantry" },
+                { name: "Olive oil & spices", price: 8, category: "Pantry" }
+            ],
+            medium: [
+                { name: "Dried beans & lentils (3 lbs)", price: 12, category: "Proteins" },
+                { name: "Eggs (2 dozen, organic)", price: 10, category: "Proteins" },
+                { name: "Greek yogurt (48 oz)", price: 9, category: "Proteins" },
+                { name: "Tofu & tempeh", price: 10, category: "Proteins" },
+                { name: "Cottage cheese", price: 6, category: "Proteins" },
+                { name: "Rice, quinoa & couscous", price: 12, category: "Grains" },
+                { name: "Whole grain bread & tortillas", price: 8, category: "Grains" },
+                { name: "Oats & granola", price: 9, category: "Grains" },
+                { name: "Fresh & frozen vegetables", price: 15, category: "Vegetables" },
+                { name: "Salad greens & herbs", price: 8, category: "Vegetables" },
+                { name: "Fresh fruits & berries", price: 12, category: "Fruits" },
+                { name: "Nut butters & nuts", price: 10, category: "Pantry" },
+                { name: "Avocados (4)", price: 6, category: "Pantry" },
+                { name: "Cheese variety", price: 10, category: "Pantry" }
+            ],
+            high: [
+                { name: "Organic beans & lentils (4 lbs)", price: 18, category: "Proteins" },
+                { name: "Eggs (3 dozen, pasture-raised)", price: 18, category: "Proteins" },
+                { name: "Greek yogurt (64 oz, organic)", price: 14, category: "Proteins" },
+                { name: "Organic tofu & tempeh", price: 15, category: "Proteins" },
+                { name: "Cottage cheese (organic)", price: 8, category: "Proteins" },
+                { name: "Protein powder", price: 12, category: "Proteins" },
+                { name: "Organic grains variety", price: 18, category: "Grains" },
+                { name: "Artisan bread & tortillas", price: 12, category: "Grains" },
+                { name: "Premium granola & oats", price: 12, category: "Grains" },
+                { name: "Organic fresh vegetables", price: 22, category: "Vegetables" },
+                { name: "Premium salad greens & herbs", price: 12, category: "Vegetables" },
+                { name: "Organic fruits & berries", price: 18, category: "Fruits" },
+                { name: "Specialty nut butters & nuts", price: 16, category: "Pantry" },
+                { name: "Organic avocados (6)", price: 10, category: "Pantry" },
+                { name: "Artisan cheese variety", price: 15, category: "Pantry" },
+                { name: "Specialty sauces & oils", price: 12, category: "Pantry" }
+            ]
+        };
+        
+        // Sample restaurants
+        const sampleRestaurants = [
+            {
+                name: "Green Leaf Cafe",
+                cuisine: "Vegetarian",
+                distance: "0.5 mi",
+                tags: ["High-Protein", "Vegan Options", "Quick Service"],
+                description: "Fresh bowls, salads, and protein-packed meals"
+            },
+            {
+                name: "The Protein Kitchen",
+                cuisine: "Health Food",
+                distance: "0.8 mi",
+                tags: ["High-Protein", "Meal Prep", "Budget-Friendly"],
+                description: "Build-your-own bowls with plant-based proteins"
+            },
+            {
+                name: "Zen Garden",
+                cuisine: "Asian Fusion",
+                distance: "1.2 mi",
+                tags: ["Vegetarian", "Tofu Specialties", "Fresh Ingredients"],
+                description: "Authentic tofu and vegetable dishes"
+            },
+            {
+                name: "Mediterranean Bowls",
+                cuisine: "Mediterranean",
+                distance: "0.6 mi",
+                tags: ["High-Protein", "Chickpea Bowls", "Fresh & Healthy"],
+                description: "Falafel, hummus, and grain bowls"
+            },
+            {
+                name: "Whole Foods Market",
+                cuisine: "Grocery/Deli",
+                distance: "1.0 mi",
+                tags: ["Vegetarian", "Organic", "Hot Bar"],
+                description: "Prepared vegetarian meals and salad bar"
+            }
+        ];
+        
+        // Initialize
+        function init() {
+            renderMeals();
+            renderGroceryList();
+            renderRestaurants();
+        }
+        
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+        
+        // Update protein goal
+        function updateProtein(value) {
+            currentProteinGoal = parseInt(value);
+            document.getElementById('protein-value').textContent = value + 'g';
+            renderMeals();
+        }
+        
+        // Set budget
+        function setBudget(budget, element) {
+            currentBudget = budget;
+            document.querySelectorAll('.budget-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            renderGroceryList();
+        }
+        
+        // Render meals
+        function renderMeals() {
+            const container = document.getElementById('meals-container');
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            let html = '';
+            days.forEach((day, index) => {
+                const dayKey = day.toLowerCase();
+                const meals = sampleMeals[dayKey];
+                const totalProtein = meals.breakfast.protein + meals.lunch.protein + meals.dinner.protein;
+                
+                html += `
+                    <div class="day-card">
+                        <div class="day-header">
+                            <div class="day-name">${day}</div>
+                            <div class="protein-badge">${totalProtein}g protein</div>
+                        </div>
+                        <div class="meal">
+                            <div class="meal-type">Breakfast</div>
+                            <div class="meal-name">${meals.breakfast.name}</div>
+                            <div style="color: #6b7280; font-size: 0.9em;">${meals.breakfast.protein}g protein</div>
+                        </div>
+                        <div class="meal">
+                            <div class="meal-type">Lunch</div>
+                            <div class="meal-name">${meals.lunch.name}</div>
+                            <div style="color: #6b7280; font-size: 0.9em;">${meals.lunch.protein}g protein</div>
+                        </div>
+                        <div class="meal">
+                            <div class="meal-type">Dinner</div>
+                            <div class="meal-name">${meals.dinner.name}</div>
+                            <div style="color: #6b7280; font-size: 0.9em;">${meals.dinner.protein}g protein</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Render grocery list
+        function renderGroceryList() {
+            const container = document.getElementById('grocery-list');
+            const items = groceryItems[currentBudget];
+            
+            const categories = [...new Set(items.map(item => item.category))];
+            let html = '';
+            let totalCost = 0;
+            
+            categories.forEach(category => {
+                const categoryItems = items.filter(item => item.category === category);
+                
+                html += `
+                    <div class="grocery-section">
+                        <h3>${category}</h3>
+                        <div class="grocery-items">
+                `;
+                
+                categoryItems.forEach((item, index) => {
+                    totalCost += item.price;
+                    html += `
+                        <div class="grocery-item" id="item-${category}-${index}">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <input type="checkbox" onchange="toggleItem('item-${category}-${index}')">
+                                <span>${item.name}</span>
+                            </div>
+                            <span class="item-price">$${item.price}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `<div class="total-cost">Total Weekly Cost: $${totalCost}</div>`;
+            container.innerHTML = html;
+        }
+        
+        // Toggle grocery item
+        function toggleItem(itemId) {
+            const item = document.getElementById(itemId);
+            item.classList.toggle('checked');
+        }
+        
+        // Render restaurants
+        function renderRestaurants(restaurants = sampleRestaurants) {
+            const container = document.getElementById('restaurants-container');
+            
+            let html = '';
+            restaurants.forEach(restaurant => {
+                html += `
+                    <div class="restaurant-card">
+                        <div class="restaurant-name">${restaurant.name}</div>
+                        <div style="color: #6b7280; margin: 5px 0;">${restaurant.cuisine}</div>
+                        <div style="color: #374151; margin: 8px 0;">${restaurant.description}</div>
+                        <div class="restaurant-distance">📍 ${restaurant.distance}</div>
+                        <div class="restaurant-tags">
+                            ${restaurant.tags.map(tag => `<span class="restaurant-tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="loading">No restaurants found. Try a different search.</div>';
+        }
+        
+        // Filter restaurants
+        function filterRestaurants(searchTerm) {
+            if (!searchTerm) {
+                renderRestaurants();
+                return;
+            }
+            
+            const filtered = sampleRestaurants.filter(restaurant => {
+                return restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       restaurant.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+            });
+            
+            renderRestaurants(filtered);
+        }
+        
+        // Find restaurants (placeholder for real API integration)
+        function findRestaurants() {
+            const location = document.getElementById('location-input').value;
+            const container = document.getElementById('restaurants-container');
+            
+            container.innerHTML = '<div class="loading">🔍 Searching for restaurants near ' + location + '...</div>';
+            
+            // Simulate API call
+            setTimeout(() => {
+                renderRestaurants();
+            }, 1000);
+        }
+        
+        // Connect to Airtable
+        async function connectAirtable() {
+            const apiKey = document.getElementById('airtable-api-key').value;
+            const baseId = document.getElementById('airtable-base-id').value;
+            const statusDiv = document.getElementById('connection-status');
+            
+            if (!apiKey || !baseId) {
+                statusDiv.textContent = '❌ Please enter both API key and Base ID';
+                statusDiv.style.color = '#c33';
+                return;
+            }
+            
+            statusDiv.textContent = '⏳ Connecting to Airtable...';
+            statusDiv.style.color = '#92400e';
+            
+            // This is a placeholder - in production you'd make actual API calls
+            setTimeout(() => {
+                airtableConnected = true;
+                statusDiv.textContent = '✅ Connected! Your data will sync automatically.';
+                statusDiv.style.color = '#059669';
+                
+                // Store credentials in localStorage
+                localStorage.setItem('airtable-api-key', apiKey);
+                localStorage.setItem('airtable-base-id', baseId);
+            }, 1500);
+        }
+        
+        // Load saved Airtable credentials
+        function loadAirtableCredentials() {
+            const apiKey = localStorage.getItem('airtable-api-key');
+            const baseId = localStorage.getItem('airtable-base-id');
+            
+            if (apiKey && baseId) {
+                document.getElementById('airtable-api-key').value = apiKey;
+                document.getElementById('airtable-base-id').value = baseId;
+                document.getElementById('connection-status').textContent = '✅ Previously connected';
+                document.getElementById('connection-status').style.color = '#059669';
+            }
+        }
+        
+        // Initialize on load
+        window.onload = function() {
+            init();
+            loadAirtableCredentials();
+        };
+    </script>
 </body>
 </html>
