@@ -1038,88 +1038,385 @@ function submitWeek() {
 }
 
 // ═══════════════════════════════════════════════
-// GROCERY LIST FROM AIRTABLE DATA
+// SMART INGREDIENT PARSER - EXACT QUANTITIES
+// ═══════════════════════════════════════════════
+
+/**
+ * Parse ingredient string into: quantity, unit, name
+ * Examples:
+ *   "2 cups spinach" → {qty: 2, unit: "cups", name: "spinach"}
+ *   "1 lb ground beef" → {qty: 1, unit: "lb", name: "ground beef"}
+ *   "3 cloves garlic, minced" → {qty: 3, unit: "cloves", name: "garlic"}
+ */
+function parseIngredient(ingredientStr) {
+    const clean = ingredientStr.trim().toLowerCase();
+    if (!clean) return null;
+
+    // Common units to detect
+    const units = [
+        'cup', 'cups', 'tablespoon', 'tablespoons', 'tbsp', 'teaspoon', 'teaspoons', 'tsp',
+        'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces', 'g', 'gram', 'grams',
+        'kg', 'kilogram', 'kilograms', 'ml', 'milliliter', 'milliliters', 'l', 'liter', 'liters',
+        'clove', 'cloves', 'piece', 'pieces', 'slice', 'slices', 'can', 'cans',
+        'package', 'packages', 'bunch', 'bunches', 'head', 'heads', 'stalk', 'stalks',
+        'pinch', 'dash', 'handful', 'sprig', 'sprigs'
+    ];
+
+    // Try to match: [number] [fraction?] [unit] [ingredient name]
+    // Patterns: "2 cups spinach", "1.5 lbs chicken", "1/2 cup rice", "3 cloves garlic"
+    
+    const numberPattern = /^(\d+\.?\d*|\d*\/\d+)\s*/;
+    const match = clean.match(numberPattern);
+    
+    if (!match) {
+        // No quantity found, treat whole string as ingredient name
+        return { qty: 1, unit: '', name: clean, original: ingredientStr };
+    }
+
+    let qty = match[1];
+    // Convert fractions to decimals
+    if (qty.includes('/')) {
+        const [num, denom] = qty.split('/').map(Number);
+        qty = num / denom;
+    } else {
+        qty = parseFloat(qty);
+    }
+
+    let remaining = clean.slice(match[0].length).trim();
+    
+    // Try to find unit
+    let unit = '';
+    let name = remaining;
+    
+    for (const u of units) {
+        const unitRegex = new RegExp(`^${u}\\b`, 'i');
+        if (unitRegex.test(remaining)) {
+            unit = u;
+            name = remaining.slice(u.length).trim();
+            break;
+        }
+    }
+
+    // Clean up name - remove descriptions after comma
+    name = name.split(',')[0].trim();
+    name = name.replace(/\(.*?\)/g, '').trim(); // remove parentheticals
+    
+    return { qty, unit, name, original: ingredientStr };
+}
+
+/**
+ * Combine duplicate ingredients with same unit
+ */
+function combineIngredients(parsedList) {
+    const combined = {};
+    
+    parsedList.forEach(item => {
+        if (!item) return;
+        
+        // Create key: "name|unit" to group matching items
+        const key = `${item.name}|${item.unit}`;
+        
+        if (!combined[key]) {
+            combined[key] = {
+                name: item.name,
+                unit: item.unit,
+                qty: 0,
+                sources: []
+            };
+        }
+        
+        combined[key].qty += item.qty;
+        combined[key].sources.push(item.original);
+    });
+    
+    return Object.values(combined);
+}
+
+/**
+ * Format quantity for display
+ */
+function formatQuantity(qty, unit) {
+    // Round to reasonable precision
+    let rounded = qty;
+    if (qty < 1) {
+        rounded = Math.round(qty * 4) / 4; // Round to nearest 1/4
+    } else if (qty < 10) {
+        rounded = Math.round(qty * 2) / 2; // Round to nearest 1/2
+    } else {
+        rounded = Math.round(qty);
+    }
+    
+    // Format fractions nicely
+    if (rounded === 0.25) return '¼';
+    if (rounded === 0.5) return '½';
+    if (rounded === 0.75) return '¾';
+    if (rounded === 1.5) return '1½';
+    if (rounded === 2.5) return '2½';
+    
+    // For larger decimals, show up to 1 decimal place
+    if (rounded % 1 !== 0) {
+        return rounded.toFixed(1);
+    }
+    
+    return rounded.toString();
+}
+
+/**
+ * Estimate price based on ingredient type
+ */
+function estimateIngredientPrice(name, qty, unit) {
+    const n = name.toLowerCase();
+    
+    // Proteins - more expensive
+    if (n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('salmon') || 
+        n.includes('shrimp') || n.includes('fish') || n.includes('meat')) {
+        const basePrice = unit.includes('lb') || unit.includes('pound') ? 8 : 12;
+        return Math.max(4, Math.round(basePrice * Math.min(qty, 2)));
+    }
+    
+    // Plant proteins
+    if (n.includes('tofu') || n.includes('tempeh') || n.includes('seitan')) {
+        return Math.max(3, Math.round(4 * Math.min(qty, 1.5)));
+    }
+    
+    // Eggs
+    if (n.includes('egg')) {
+        return qty > 12 ? 8 : 5;
+    }
+    
+    // Dairy
+    if (n.includes('cheese') || n.includes('yogurt') || n.includes('milk')) {
+        return Math.max(4, Math.round(6 * Math.min(qty, 1)));
+    }
+    
+    // Grains
+    if (n.includes('rice') || n.includes('pasta') || n.includes('quinoa') || n.includes('oat') || 
+        n.includes('bread') || n.includes('tortilla')) {
+        return Math.max(2, Math.round(4 * Math.min(qty, 2)));
+    }
+    
+    // Fresh produce
+    if (n.includes('spinach') || n.includes('kale') || n.includes('lettuce') || n.includes('tomato') ||
+        n.includes('cucumber') || n.includes('pepper') || n.includes('onion') || n.includes('carrot') ||
+        n.includes('broccoli') || n.includes('cauliflower')) {
+        return Math.max(2, Math.round(3 * Math.min(qty, 2)));
+    }
+    
+    // Fruits
+    if (n.includes('apple') || n.includes('banana') || n.includes('orange') || n.includes('berry') ||
+        n.includes('melon') || n.includes('grape')) {
+        return Math.max(3, Math.round(4 * Math.min(qty, 1.5)));
+    }
+    
+    // Pantry staples
+    if (n.includes('oil') || n.includes('sauce') || n.includes('vinegar') || n.includes('spice') ||
+        n.includes('seasoning') || n.includes('salt') || n.includes('pepper')) {
+        return Math.max(2, 5);
+    }
+    
+    // Nuts and seeds
+    if (n.includes('almond') || n.includes('walnut') || n.includes('cashew') || n.includes('peanut') ||
+        n.includes('seed') || n.includes('nut')) {
+        return Math.max(4, Math.round(7 * Math.min(qty, 1)));
+    }
+    
+    // Default
+    return Math.max(2, Math.round(3 * Math.min(qty, 1.5)));
+}
+
+/**
+ * Categorize ingredient for organization
+ */
+function categorizeIngredient(name) {
+    const n = name.toLowerCase();
+    
+    if (n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('salmon') ||
+        n.includes('shrimp') || n.includes('fish') || n.includes('meat') || n.includes('tofu') ||
+        n.includes('tempeh') || n.includes('egg') || n.includes('protein')) {
+        return '🥩 Proteins';
+    }
+    
+    if (n.includes('cheese') || n.includes('yogurt') || n.includes('milk') || n.includes('butter') ||
+        n.includes('cream') || n.includes('dairy')) {
+        return '🥛 Dairy';
+    }
+    
+    if (n.includes('spinach') || n.includes('kale') || n.includes('lettuce') || n.includes('tomato') ||
+        n.includes('cucumber') || n.includes('pepper') || n.includes('onion') || n.includes('carrot') ||
+        n.includes('broccoli') || n.includes('cauliflower') || n.includes('celery') || n.includes('zucchini') ||
+        n.includes('vegetable')) {
+        return '🥦 Vegetables';
+    }
+    
+    if (n.includes('apple') || n.includes('banana') || n.includes('orange') || n.includes('berry') ||
+        n.includes('melon') || n.includes('grape') || n.includes('lemon') || n.includes('lime') ||
+        n.includes('fruit') || n.includes('peach') || n.includes('pear')) {
+        return '🍎 Fruits';
+    }
+    
+    if (n.includes('rice') || n.includes('pasta') || n.includes('quinoa') || n.includes('oat') ||
+        n.includes('bread') || n.includes('tortilla') || n.includes('noodle') || n.includes('grain') ||
+        n.includes('flour') || n.includes('cereal')) {
+        return '🌾 Grains';
+    }
+    
+    if (n.includes('bean') || n.includes('lentil') || n.includes('chickpea') || n.includes('pea')) {
+        return '🫘 Legumes';
+    }
+    
+    if (n.includes('almond') || n.includes('walnut') || n.includes('cashew') || n.includes('peanut') ||
+        n.includes('seed') || n.includes('nut')) {
+        return '🥜 Nuts & Seeds';
+    }
+    
+    if (n.includes('oil') || n.includes('sauce') || n.includes('vinegar') || n.includes('spice') ||
+        n.includes('seasoning') || n.includes('salt') || n.includes('pepper') || n.includes('garlic') ||
+        n.includes('ginger') || n.includes('herb') || n.includes('condiment')) {
+        return '🧴 Pantry & Seasonings';
+    }
+    
+    return '📦 Other';
+}
+
+// ═══════════════════════════════════════════════
+// GENERATE COMPREHENSIVE GROCERY LIST
 // ═══════════════════════════════════════════════
 function generateGroceryListFromMealPlan() {
     const container = document.getElementById('grocery-list');
 
-    // Collect all ingredients from planned meals
-    const ingredientMap = {};
+    // Collect ALL ingredients from planned meals
+    const allParsedIngredients = [];
+    let mealCount = 0;
 
     DAYS.forEach(day => {
         const dayMeals = state.mealPlan[day] || {};
         ['breakfast','lunch','dinner'].forEach(type => {
             const meal = dayMeals[type];
             if (meal && meal.ingredients) {
-                meal.ingredients.split(',').forEach(ing => {
-                    const clean = ing.trim();
-                    if (!clean) return;
-                    if (!ingredientMap[clean]) ingredientMap[clean] = { count: 0, meals: [] };
-                    ingredientMap[clean].count++;
-                    ingredientMap[clean].meals.push(`${day} ${type}`);
+                mealCount++;
+                // Split by comma or newline
+                const ingredientList = meal.ingredients.split(/[,\n]/).filter(s => s.trim());
+                ingredientList.forEach(ing => {
+                    const parsed = parseIngredient(ing);
+                    if (parsed) {
+                        parsed.source = `${day} ${type} - ${meal.name}`;
+                        allParsedIngredients.push(parsed);
+                    }
                 });
             }
         });
     });
 
-    const allIngredients = Object.entries(ingredientMap);
-
-    if (allIngredients.length === 0) {
-        // Fallback to budget-based list
-        generateBudgetGroceryList();
+    if (allParsedIngredients.length === 0) {
+        container.innerHTML = '<div class="loading-text">No ingredients found. Make sure your Airtable recipes have ingredients listed!</div>';
         return;
     }
 
-    // Estimate prices based on common ingredients
-    function estimatePrice(ingredient) {
-        const ing = ingredient.toLowerCase();
-        if (ing.includes('chicken') || ing.includes('beef') || ing.includes('salmon') || ing.includes('shrimp')) return '$' + (Math.floor(Math.random()*5)+6);
-        if (ing.includes('tofu') || ing.includes('tempeh') || ing.includes('egg')) return '$' + (Math.floor(Math.random()*3)+3);
-        if (ing.includes('rice') || ing.includes('pasta') || ing.includes('noodle') || ing.includes('bread')) return '$' + (Math.floor(Math.random()*2)+2);
-        if (ing.includes('sauce') || ing.includes('oil') || ing.includes('spice') || ing.includes('seasoning')) return '$' + (Math.floor(Math.random()*3)+2);
-        return '$' + (Math.floor(Math.random()*3)+1);
-    }
+    // Combine duplicate ingredients
+    const combined = combineIngredients(allParsedIngredients);
 
-    // Group by frequency
-    const frequent = allIngredients.filter(([,v]) => v.count >= 3);
-    const regular = allIngredients.filter(([,v]) => v.count === 2);
-    const occasional = allIngredients.filter(([,v]) => v.count === 1);
+    // Categorize
+    const categorized = {};
+    combined.forEach(item => {
+        const cat = categorizeIngredient(item.name);
+        if (!categorized[cat]) categorized[cat] = [];
+        categorized[cat].push(item);
+    });
 
+    // Sort categories
+    const categoryOrder = ['🥩 Proteins', '🥛 Dairy', '🥦 Vegetables', '🍎 Fruits', '🌾 Grains', '🫘 Legumes', '🥜 Nuts & Seeds', '🧴 Pantry & Seasonings', '📦 Other'];
+    const sortedCategories = categoryOrder.filter(cat => categorized[cat]);
+
+    // Render
     let html = '';
+    let totalCost = 0;
+    let totalItems = 0;
 
-    if (frequent.length) {
-        html += renderGroceryCategory('🔁 Used 3+ Times This Week', frequent, estimatePrice);
-    }
-    if (regular.length) {
-        html += renderGroceryCategory('📋 Regular Items', regular, estimatePrice);
-    }
-    if (occasional.length) {
-        html += renderGroceryCategory('🛒 Occasional Items', occasional, estimatePrice);
-    }
+    sortedCategories.forEach(cat => {
+        const items = categorized[cat];
+        html += `<div class="grocery-section"><div class="grocery-section-title">${cat}</div>`;
+        
+        items.forEach((item, idx) => {
+            totalItems++;
+            const displayQty = formatQuantity(item.qty, item.unit);
+            const displayUnit = item.unit || '';
+            const displayName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
+            const displayText = `${displayQty}${displayUnit ? ' ' + displayUnit : ''} ${displayName}`;
+            
+            const price = estimateIngredientPrice(item.name, item.qty, item.unit);
+            totalCost += price;
+            
+            const id = `groc-${cat.replace(/\W/g,'')}-${idx}`;
+            html += `
+            <div class="grocery-item" id="${id}" title="Used in: ${item.sources.length} recipe(s)">
+                <div style="display:flex;align-items:center;">
+                    <input type="checkbox" onchange="toggleGroceryItem('${id}')">
+                    <span><strong>${displayText}</strong></span>
+                </div>
+                <span class="item-price">$${price}</span>
+            </div>`;
+        });
+        
+        html += `</div>`;
+    });
 
-    const totalItems = allIngredients.length;
-    html += `<div class="total-banner">🛒 ${totalItems} Items <span style="opacity:0.7;font-size:0.75em">from your ${DAYS.filter(d=>state.mealPlan[d]).length} planned days</span></div>`;
-    html += `<div style="margin-top:12px;text-align:center;"><span class="grocery-source-badge">✅ Generated from Airtable recipe data</span></div>`;
+    html += `<div class="total-banner">🛒 ${totalItems} Items • Estimated Total: $${totalCost}</div>`;
+    html += `<div style="margin-top:12px;text-align:center;">
+        <span class="grocery-source-badge">✅ Smart quantities from ${mealCount} planned meals</span>
+        <button class="btn btn-primary" onclick="exportGroceryList()" style="margin-left:10px;padding:8px 16px;font-size:0.85em;">
+            📥 Export List
+        </button>
+    </div>`;
 
     container.innerHTML = html;
 }
 
-function renderGroceryCategory(title, items, priceFn) {
-    return `
-        <div class="grocery-section">
-            <div class="grocery-section-title">${title}</div>
-            ${items.map(([name,], idx) => {
-                const id = 'groc-' + idx + '-' + name.replace(/\s/g,'');
-                return `
-                <div class="grocery-item" id="${id}">
-                    <div style="display:flex;align-items:center;">
-                        <input type="checkbox" onchange="toggleGroceryItem('${id}')">
-                        <span>${name}</span>
-                    </div>
-                    <span class="item-price">${priceFn(name)}</span>
-                </div>`;
-            }).join('')}
-        </div>`;
+// ═══════════════════════════════════════════════
+// EXPORT GROCERY LIST
+// ═══════════════════════════════════════════════
+function exportGroceryList() {
+    const items = document.querySelectorAll('.grocery-item');
+    let text = '🛒 NUTRIPLAN GROCERY LIST\n';
+    text += `Generated: ${new Date().toLocaleDateString()}\n`;
+    text += '=' .repeat(50) + '\n\n';
+    
+    let currentCategory = '';
+    items.forEach(item => {
+        const section = item.closest('.grocery-section');
+        const catTitle = section?.querySelector('.grocery-section-title')?.textContent;
+        
+        if (catTitle && catTitle !== currentCategory) {
+            currentCategory = catTitle;
+            text += `\n${catTitle}\n${'-'.repeat(catTitle.length)}\n`;
+        }
+        
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const checked = checkbox?.checked ? '☑' : '☐';
+        const itemText = item.querySelector('span strong')?.textContent || '';
+        const price = item.querySelector('.item-price')?.textContent || '';
+        
+        text += `${checked} ${itemText} - ${price}\n`;
+    });
+    
+    // Calculate total
+    const totalEl = document.querySelector('.total-banner');
+    if (totalEl) {
+        text += '\n' + '='.repeat(50) + '\n';
+        text += totalEl.textContent.replace('🛒', '') + '\n';
+    }
+    
+    // Download as text file
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('📥 Grocery list exported!');
 }
 
 function generateGroceryList() {
