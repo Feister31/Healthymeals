@@ -113,6 +113,34 @@
         .difficulty-hard { background: #fee2e2; color: #991b1b; }
         .custom-recipe-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #7c3aed, #a78bfa); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.7em; font-weight: 700; }
 
+        /* MEAL PLANNER */
+        .day-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.2); margin-bottom: 14px; }
+        .day-header { background: linear-gradient(135deg, var(--green), var(--green-light)); padding: 13px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .day-name { color: white; font-family: 'Playfair Display', serif; font-size: 1.2em; font-weight: 700; }
+        .day-protein-info { display: flex; align-items: center; gap: 8px; }
+        .day-protein-bar-wrap { width: 80px; height: 6px; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+        .day-protein-bar { height: 100%; background: white; border-radius: 3px; transition: width 0.5s ease; }
+        .day-protein-label { color: white; font-size: 0.82em; font-weight: 600; }
+        .day-meals { display: grid; grid-template-columns: repeat(3,1fr); }
+        .meal-slot { padding: 16px 18px; border-right: 1px solid #efefef; cursor: pointer; transition: all 0.2s; min-height: 85px; position: relative; }
+        .meal-slot:last-child { border-right: none; }
+        .meal-slot:hover { background: #f0fdf4; }
+        .meal-slot.filled { background: #f0fdf4; }
+        .meal-slot.filled:hover { background: #e6f9ee; }
+        .meal-type-label { font-size: 0.68em; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 5px; }
+        .meal-name-text { color: var(--dark); font-size: 0.88em; font-weight: 600; line-height: 1.3; }
+        .meal-protein-text { color: var(--green); font-size: 0.75em; font-weight: 700; margin-top: 4px; }
+        .add-meal-text { color: #b2dfdb; font-size: 0.82em; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .remove-meal-btn { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background: #fee2e2; border: none; border-radius: 50%; color: #ef4444; font-size: 0.75em; cursor: pointer; display: none; align-items: center; justify-content: center; transition: all 0.2s; }
+        .meal-slot.filled:hover .remove-meal-btn { display: flex; }
+
+        /* SUGGESTIONS */
+        .suggestion-card { background: var(--card-bg); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.25s; border: 2px solid transparent; }
+        .suggestion-card:hover { border-color: var(--green-light); transform: translateY(-3px); }
+        .suggestion-label { font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; }
+        .suggestion-name { font-size: 0.88em; font-weight: 600; color: var(--dark); line-height: 1.3; margin-bottom: 5px; }
+        .suggestion-protein { font-size: 0.78em; color: var(--green); font-weight: 700; }
+
         /* CUISINE COLORS */
         .cuisine-Italian{background:linear-gradient(135deg,#e63946,#f4a261)}
         .cuisine-Chinese{background:linear-gradient(135deg,#e63946,#ffb703)}
@@ -304,8 +332,58 @@
         <!-- ═══ PLANNER TAB ═══ -->
         <div id="planner-tab" class="tab-content">
             <div class="section-header">
-                <h2>Meal Planner</h2>
-                <p>Coming soon - drag and drop meal planning</p>
+                <h2>Weekly Meal Planner</h2>
+                <p>Plan your week and track your daily protein goals</p>
+            </div>
+
+            <!-- PROTEIN SLIDER -->
+            <div style="background:linear-gradient(135deg,rgba(45,106,79,0.92),rgba(82,183,136,0.8));border-radius:16px;padding:22px 28px;margin-bottom:22px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;">
+                <label style="color:white;font-weight:700;font-size:1em;white-space:nowrap;">💪 Daily Protein Goal</label>
+                <div style="flex:1;min-width:200px;display:flex;align-items:center;gap:14px;">
+                    <input type="range" id="protein-slider" min="50" max="200" value="85" oninput="updateProteinGoal(this.value)" style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.3);outline:none;cursor:pointer;">
+                    <div style="background:white;color:var(--green);padding:7px 18px;border-radius:22px;font-weight:800;font-size:1.05em;min-width:75px;text-align:center;" id="protein-value">85g</div>
+                </div>
+                <button class="btn-secondary" onclick="generateSuggestions()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:10px 18px;font-size:0.88em;">✨ Suggest Meals</button>
+            </div>
+
+            <!-- SMART SUGGESTIONS -->
+            <div id="suggestions-section" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:20px;margin-bottom:22px;display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="color:white;font-size:1.05em;font-weight:600;">✨ Smart Suggestions for <span id="suggestion-day-label">Monday</span></h3>
+                    <button class="btn-secondary" onclick="rotateSuggestions()" style="background:rgba(82,183,136,0.2);border:1px solid rgba(82,183,136,0.4);color:var(--green-light);padding:8px 16px;font-size:0.82em;">🔄 Rotate</button>
+                </div>
+                <div id="suggestions-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+                <div id="protein-preview" style="margin-top:12px;text-align:center;color:rgba(255,255,255,0.6);font-size:0.85em;"></div>
+                <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="applySuggestions()">✅ Apply to Plan</button>
+                    <select id="suggestion-day-select" style="padding:10px 14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-family:'DM Sans',sans-serif;font-size:0.88em;">
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                    <button class="btn-secondary" onclick="applyToAllDays()" style="padding:10px 14px;">Apply to All Days</button>
+                </div>
+            </div>
+
+            <!-- WEEK CONFIRMED BANNER -->
+            <div id="week-confirmed" style="background:linear-gradient(135deg,rgba(45,106,79,0.15),rgba(82,183,136,0.1));border:1px solid rgba(82,183,136,0.35);border-radius:12px;padding:16px 20px;margin-bottom:18px;display:none;align-items:center;gap:12px;">
+                <span style="font-size:1.5em;">🎉</span>
+                <p style="color:var(--green-light);font-weight:600;font-size:0.95em;">Week confirmed! Head to the <strong>Grocery List</strong> tab.</p>
+            </div>
+
+            <!-- DAY CARDS -->
+            <div id="meal-plan-container" style="display:grid;gap:14px;"></div>
+
+            <!-- SUBMIT WEEK BUTTON -->
+            <div style="margin-top:25px;text-align:center;">
+                <button id="submit-week-btn" onclick="submitWeek()" style="padding:18px 50px;background:linear-gradient(135deg,var(--orange-deep),var(--orange));border:none;border-radius:14px;color:white;font-family:'Playfair Display',serif;font-size:1.3em;font-weight:700;cursor:pointer;box-shadow:0 8px 25px rgba(231,111,81,0.45);transition:all 0.35s;">
+                    🗓️ Confirm This Week's Meals
+                </button>
+                <div id="submit-hint" style="color:rgba(255,255,255,0.4);font-size:0.85em;margin-top:10px;">Fill in your meals to confirm</div>
             </div>
         </div>
 
@@ -502,7 +580,12 @@ let state = {
     baseId: '',
     recipes: [],
     customRecipes: [],
+    mealPlan: {}, // {Monday: {breakfast, lunch, dinner}, ...}
     inventory: {}, // {ingredientName: {qty, unit, used: false}}
+    weekConfirmed: false,
+    proteinGoal: 85,
+    usedRecipeIds: [],
+    currentSuggestions: null,
     filters: {
         priceMin: 0,
         priceMax: 50,
@@ -511,6 +594,8 @@ let state = {
         tags: []
     }
 };
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 const cuisineEmoji = {'Italian':'🍝','Chinese':'🥟','Indian':'🍛','Japanese':'🍱','Mediterranean':'🥙','Mexican':'🌮','Thai':'🍜','French':'🥐','American':'🥗','Greek':'🫒','Middle Eastern':'🧆','Korean':'🍲'};
 function getCuisineEmoji(c) { return cuisineEmoji[c] || '🍽️'; }
@@ -524,7 +609,9 @@ function init() {
     if (state.connected) fetchRecipes();
     else showSampleRecipes();
     renderRecipes();
+    renderMealPlan();
     updateInventoryStats();
+    updateSubmitButton();
 }
 
 function loadSavedData() {
@@ -547,6 +634,11 @@ function loadSavedData() {
     const inv = localStorage.getItem('inventory');
     if (inv) {
         try { state.inventory = JSON.parse(inv); } catch(e) {}
+    }
+    
+    const plan = localStorage.getItem('meal-plan');
+    if (plan) {
+        try { state.mealPlan = JSON.parse(plan); } catch(e) {}
     }
 }
 
@@ -785,9 +877,43 @@ function openRecipeModal(id, isCustom) {
         ${recipe.tags && recipe.tags.length ? `<div style="margin-bottom:16px;"><strong style="color:var(--muted);font-size:0.85em;">Tags:</strong> ${recipe.tags.map(t=>`<span style="background:#f5f5f5;padding:4px 10px;border-radius:12px;font-size:0.8em;margin-left:6px;">${t}</span>`).join('')}</div>` : ''}
         ${recipe.ingredients ? `<div style="margin-bottom:18px;"><h4 style="color:var(--muted);font-size:0.78em;text-transform:uppercase;margin-bottom:8px;">Ingredients</h4><p style="white-space:pre-line;line-height:1.7;">${recipe.ingredients}</p></div>` : ''}
         ${recipe.instructions ? `<div style="margin-bottom:18px;"><h4 style="color:var(--muted);font-size:0.78em;text-transform:uppercase;margin-bottom:8px;">Instructions</h4><p style="white-space:pre-line;line-height:1.7;">${recipe.instructions}</p></div>` : ''}
-        <button class="btn btn-primary" onclick="closeRecipeModal()">Close</button>
+        
+        <div style="background:#f0fdf4;border:1px solid var(--green-pale);border-radius:12px;padding:18px;margin-bottom:18px;">
+            <h4 style="color:var(--green);font-size:0.82em;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">📅 Add to Meal Plan</h4>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <select id="modal-day" style="flex:1;min-width:130px;padding:10px 13px;border:1.5px solid #d1fae5;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88em;color:var(--dark);">
+                    ${DAYS.map(d => `<option value="${d}">${d}</option>`).join('')}
+                </select>
+                <select id="modal-meal-type" style="flex:1;min-width:130px;padding:10px 13px;border:1.5px solid #d1fae5;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88em;color:var(--dark);">
+                    <option value="breakfast">🌅 Breakfast</option>
+                    <option value="lunch">☀️ Lunch</option>
+                    <option value="dinner">🌙 Dinner</option>
+                </select>
+                <button class="btn btn-primary" onclick="addRecipeToMealPlan('${id}','${isCustom}')" style="padding:10px 18px;font-size:0.88em;">✅ Add</button>
+            </div>
+        </div>
+        
+        <button class="btn btn-secondary" onclick="closeRecipeModal()">Close</button>
     `;
     document.getElementById('recipe-modal').classList.add('active');
+}
+
+function addRecipeToMealPlan(id, isCustom) {
+    const recipe = isCustom === 'true'
+        ? state.customRecipes.find(r => r.id === id)
+        : state.recipes.find(r => r.id === id);
+    if (!recipe) return;
+    
+    const day = document.getElementById('modal-day').value;
+    const type = document.getElementById('modal-meal-type').value;
+    
+    if (!state.mealPlan[day]) state.mealPlan[day] = {};
+    state.mealPlan[day][type] = recipe;
+    saveMealPlan();
+    renderMealPlan();
+    updateSubmitButton();
+    closeRecipeModal();
+    showToast(`✅ ${recipe.name} added to ${day} ${type}!`);
 }
 
 function closeRecipeModal() {
@@ -806,6 +932,230 @@ function updateInventoryStats() {
     document.getElementById('total-items').textContent = total;
     document.getElementById('used-items').textContent = used;
     document.getElementById('available-items').textContent = available;
+}
+
+// ═══════════════════════════════════════════════
+// MEAL PLANNING
+// ═══════════════════════════════════════════════
+function renderMealPlan() {
+    const c = document.getElementById('meal-plan-container');
+    c.innerHTML = DAYS.map(day => {
+        const dayMeals = state.mealPlan[day] || {};
+        const total = (dayMeals.breakfast?.protein||0) + (dayMeals.lunch?.protein||0) + (dayMeals.dinner?.protein||0);
+        const pct = Math.min(100, (total / state.proteinGoal) * 100);
+        return `
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-name">${day}</div>
+                <div class="day-protein-info">
+                    <div class="day-protein-bar-wrap"><div class="day-protein-bar" style="width:${pct}%"></div></div>
+                    <div class="day-protein-label">${total}/${state.proteinGoal}g</div>
+                </div>
+            </div>
+            <div class="day-meals">
+                ${renderMealSlot(day,'breakfast',dayMeals.breakfast)}
+                ${renderMealSlot(day,'lunch',dayMeals.lunch)}
+                ${renderMealSlot(day,'dinner',dayMeals.dinner)}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderMealSlot(day, type, meal) {
+    if (meal) {
+        return `
+        <div class="meal-slot filled">
+            <div class="meal-type-label">${type}</div>
+            <div class="meal-name-text">${meal.name}</div>
+            <div class="meal-protein-text">💪 ${meal.protein}g</div>
+            <button class="remove-meal-btn" onclick="removeMeal('${day}','${type}')">✕</button>
+        </div>`;
+    }
+    return `
+    <div class="meal-slot" onclick="promptAddMeal('${day}','${type}')">
+        <div class="meal-type-label">${type}</div>
+        <div class="add-meal-text">➕ Add meal</div>
+    </div>`;
+}
+
+function promptAddMeal(day, type) {
+    showToast(`📌 Go to Recipes tab and click a recipe to add to ${day} ${type}`);
+    switchTab('recipes', document.querySelectorAll('.nav-tab')[0]);
+}
+
+function removeMeal(day, type) {
+    if (state.mealPlan[day]) {
+        delete state.mealPlan[day][type];
+        saveMealPlan();
+        renderMealPlan();
+        updateSubmitButton();
+    }
+}
+
+function updateProteinGoal(value) {
+    state.proteinGoal = parseInt(value);
+    document.getElementById('protein-value').textContent = value + 'g';
+    renderMealPlan();
+}
+
+function updateSubmitButton() {
+    const filledDays = DAYS.filter(d => {
+        const m = state.mealPlan[d];
+        return m && (m.breakfast || m.lunch || m.dinner);
+    }).length;
+    const btn = document.getElementById('submit-week-btn');
+    const hint = document.getElementById('submit-hint');
+    hint.textContent = `${filledDays}/7 days planned`;
+    btn.disabled = filledDays === 0;
+}
+
+function submitWeek() {
+    const filledDays = DAYS.filter(d => {
+        const m = state.mealPlan[d];
+        return m && (m.breakfast || m.lunch || m.dinner);
+    }).length;
+
+    if (filledDays === 0) { showToast('⚠️ Add some meals first!'); return; }
+
+    state.weekConfirmed = true;
+    document.getElementById('week-confirmed').style.display = 'flex';
+    showToast('🎉 Week confirmed! Check Grocery tab!');
+
+    setTimeout(() => {
+        switchTab('grocery', document.querySelectorAll('.nav-tab')[2]);
+    }, 1500);
+}
+
+// ═══════════════════════════════════════════════
+// SMART SUGGESTIONS
+// ═══════════════════════════════════════════════
+function generateSuggestions() {
+    const all = [...state.recipes, ...state.customRecipes];
+    if (!all.length) { showToast('⚠️ Load or create recipes first!'); return; }
+    const day = document.getElementById('suggestion-day-select').value;
+    document.getElementById('suggestion-day-label').textContent = day;
+    const combo = findBestMealCombo(state.proteinGoal, all);
+    state.currentSuggestions = combo;
+    renderSuggestions(combo);
+    document.getElementById('suggestions-section').style.display = 'block';
+}
+
+function findBestMealCombo(proteinGoal, recipes) {
+    const goal = parseInt(proteinGoal);
+    
+    function scoreForMealType(recipe, mealType) {
+        let score = 0;
+        const p = recipe.protein || 20;
+        if (mealType === 'breakfast') score += p <= 30 ? 10 : p <= 40 ? 5 : 0;
+        if (mealType === 'lunch') score += (p >= 20 && p <= 40) ? 10 : 5;
+        if (mealType === 'dinner') score += p >= 25 ? 10 : 5;
+        if (!state.usedRecipeIds.includes(recipe.id)) score += 8;
+        score += Math.random() * 4;
+        return score;
+    }
+
+    const breakfastCandidates = [...recipes].sort((a,b) => scoreForMealType(b,'breakfast') - scoreForMealType(a,'breakfast'));
+    const lunchCandidates = [...recipes].sort((a,b) => scoreForMealType(b,'lunch') - scoreForMealType(a,'lunch'));
+    const dinnerCandidates = [...recipes].sort((a,b) => scoreForMealType(b,'dinner') - scoreForMealType(a,'dinner'));
+
+    let best = null;
+    let bestDiff = Infinity;
+
+    for (let bi = 0; bi < Math.min(5, breakfastCandidates.length); bi++) {
+        for (let li = 0; li < Math.min(5, lunchCandidates.length); li++) {
+            for (let di = 0; di < Math.min(5, dinnerCandidates.length); di++) {
+                const b = breakfastCandidates[bi];
+                const l = lunchCandidates[li];
+                const d = dinnerCandidates[di];
+                if (b.id === l.id || b.id === d.id || l.id === d.id) continue;
+                const total = (b.protein||0) + (l.protein||0) + (d.protein||0);
+                const diff = Math.abs(total - goal);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
+                    best = { breakfast: b, lunch: l, dinner: d, total };
+                }
+            }
+        }
+    }
+
+    return best || {
+        breakfast: breakfastCandidates[0],
+        lunch: lunchCandidates[1] || lunchCandidates[0],
+        dinner: dinnerCandidates[2] || dinnerCandidates[0],
+        total: (breakfastCandidates[0]?.protein||0) + (lunchCandidates[1]?.protein||0) + (dinnerCandidates[2]?.protein||0)
+    };
+}
+
+function renderSuggestions(combo) {
+    if (!combo) return;
+    const grid = document.getElementById('suggestions-grid');
+    const preview = document.getElementById('protein-preview');
+    const slots = [
+        { label: '🌅 Breakfast', recipe: combo.breakfast },
+        { label: '☀️ Lunch', recipe: combo.lunch },
+        { label: '🌙 Dinner', recipe: combo.dinner }
+    ];
+    grid.innerHTML = slots.map(s => `
+        <div class="suggestion-card">
+            <div class="suggestion-label">${s.label}</div>
+            <div class="suggestion-name">${s.recipe?.name || '—'}</div>
+            <div class="suggestion-protein">💪 ${s.recipe?.protein||0}g • ${getCuisineEmoji(s.recipe?.category)} ${s.recipe?.category||''}</div>
+        </div>`).join('');
+    const diff = combo.total - state.proteinGoal;
+    const diffStr = diff >= 0 ? `+${diff}g over` : `${Math.abs(diff)}g under`;
+    preview.innerHTML = `Total: <strong>${combo.total}g</strong> (${diffStr} goal)`;
+}
+
+function rotateSuggestions() {
+    if (state.currentSuggestions) {
+        const s = state.currentSuggestions;
+        [s.breakfast?.id, s.lunch?.id, s.dinner?.id].filter(Boolean).forEach(id => {
+            state.usedRecipeIds.push(id);
+            if (state.usedRecipeIds.length > 15) state.usedRecipeIds.shift();
+        });
+    }
+    generateSuggestions();
+}
+
+function applySuggestions() {
+    if (!state.currentSuggestions) return;
+    const day = document.getElementById('suggestion-day-select').value;
+    if (!state.mealPlan[day]) state.mealPlan[day] = {};
+    state.mealPlan[day].breakfast = state.currentSuggestions.breakfast;
+    state.mealPlan[day].lunch = state.currentSuggestions.lunch;
+    state.mealPlan[day].dinner = state.currentSuggestions.dinner;
+    saveMealPlan();
+    renderMealPlan();
+    updateSubmitButton();
+    showToast(`✅ Applied to ${day}!`);
+}
+
+function applyToAllDays() {
+    const all = [...state.recipes, ...state.customRecipes];
+    if (!all.length) { showToast('⚠️ Load recipes first!'); return; }
+    DAYS.forEach(day => {
+        const combo = findBestMealCombo(state.proteinGoal, all);
+        if (combo) {
+            [combo.breakfast?.id, combo.lunch?.id, combo.dinner?.id].filter(Boolean).forEach(id => {
+                state.usedRecipeIds.push(id);
+                if (state.usedRecipeIds.length > 30) state.usedRecipeIds.shift();
+            });
+        }
+        if (!state.mealPlan[day]) state.mealPlan[day] = {};
+        if (combo) {
+            state.mealPlan[day].breakfast = combo.breakfast;
+            state.mealPlan[day].lunch = combo.lunch;
+            state.mealPlan[day].dinner = combo.dinner;
+        }
+    });
+    saveMealPlan();
+    renderMealPlan();
+    updateSubmitButton();
+    showToast('✅ Applied to all 7 days!');
+}
+
+function saveMealPlan() {
+    localStorage.setItem('meal-plan', JSON.stringify(state.mealPlan));
 }
 
 // ═══════════════════════════════════════════════
