@@ -700,31 +700,108 @@ async function fetchRecipes() {
         const r = await fetch(`https://api.airtable.com/v0/${state.baseId}/Recipes`, { headers: {'Authorization': `Bearer ${state.apiKey}`} });
         if (r.ok) {
             const data = await r.json();
+            
+            // Debug: Log the first record to see actual field names
+            if (data.records.length > 0) {
+                console.log('First recipe fields:', Object.keys(data.records[0].fields));
+            }
+            
             state.recipes = data.records.map(rec => {
-                let p = rec.fields['Protein (g)'] || rec.fields['Protein'] || 20;
+                const fields = rec.fields;
+                
+                // Parse protein from "Nutritional Information" field
+                // Format: "Protein: 25g, Carbs: 65g, Fat: 18g, Fiber: 4g"
+                let protein = 20;
+                const nutritionInfo = fields['Nutritional Information'] || '';
+                const proteinMatch = nutritionInfo.match(/Protein:\s*(\d+)g/i);
+                if (proteinMatch) {
+                    protein = parseInt(proteinMatch[1]);
+                }
+                
+                // Auto-detect ingredients field (look for fields containing "Preparation" or "Ingredients")
+                let ingredients = '';
+                const possibleIngredientFields = ['Preparation...', 'Preparation Instructions', 'Ingredients', 'Preparation'];
+                for (const fieldName of possibleIngredientFields) {
+                    if (fields[fieldName]) {
+                        ingredients = fields[fieldName];
+                        break;
+                    }
+                }
+                
+                // Auto-detect cooking time field
+                let cookTime = 30;
+                const possibleTimeFields = ['Cooking Time...', 'Cooking Time (minutes)', 'Cooking Time', 'Prep Time'];
+                for (const fieldName of possibleTimeFields) {
+                    if (fields[fieldName]) {
+                        cookTime = parseInt(fields[fieldName]) || 30;
+                        break;
+                    }
+                }
+                
+                // Try to detect cuisine from recipe name if no Cuisine Type field
+                let cuisine = fields['Cuisine Type'] || 'Other';
+                if (cuisine === 'Other') {
+                    const name = fields['Recipe Name'] || '';
+                    if (name.includes('Spaghetti') || name.includes('Caesar')) cuisine = 'Italian';
+                    else if (name.includes('Tikka') || name.includes('Masala') || name.includes('Chili')) cuisine = 'Indian';
+                    else if (name.includes('Stir Fry') || name.includes('Kung Pao') || name.includes('Dim Sum')) cuisine = 'Chinese';
+                    else if (name.includes('Quinoa') || name.includes('Falafel')) cuisine = 'Mediterranean';
+                    else if (name.includes('Taco') || name.includes('Burrito')) cuisine = 'Mexican';
+                    else if (name.includes('Pad Thai') || name.includes('Curry')) cuisine = 'Thai';
+                    else if (name.includes('Teriyaki') || name.includes('Shakshuka')) cuisine = 'Japanese';
+                    else if (name.includes('French') || name.includes('Onion Soup')) cuisine = 'French';
+                    else if (name.includes('Peking') || name.includes('Duck')) cuisine = 'Chinese';
+                    else if (name.includes('Salmon') || name.includes('Fish')) cuisine = 'American';
+                }
+                
+                // Estimate cost from calories
+                const calories = fields['Calories per Serving'] || 300;
+                const estimatedCost = Math.max(5, Math.min(15, Math.round((calories / 40) + Math.random() * 3)));
+                
+                // Auto-detect difficulty from cook time
+                let difficulty = 'medium';
+                if (cookTime <= 20) difficulty = 'easy';
+                else if (cookTime >= 60) difficulty = 'hard';
+                
                 return {
                     id: rec.id,
-                    name: rec.fields['Recipe Name'] || rec.fields.Name || 'Unnamed',
-                    category: rec.fields['Cuisine Type'] || rec.fields.Category || 'Other',
-                    protein: typeof p === 'number' ? p : parseInt(p) || 20,
-                    prepTime: rec.fields['Cooking Time (minutes)'] || rec.fields['Cooking Time'] || 30,
-                    ingredients: rec.fields.Ingredients || '',
-                    instructions: rec.fields['Preparation Instructions'] || rec.fields.Instructions || '',
-                    tags: rec.fields.Tags || [],
-                    difficulty: rec.fields.Difficulty || 'medium',
-                    cost: rec.fields.Cost || 10,
+                    name: fields['Recipe Name'] || 'Unnamed Recipe',
+                    category: cuisine,
+                    protein: protein,
+                    prepTime: cookTime,
+                    ingredients: ingredients,
+                    instructions: ingredients, // Use same field since they seem combined
+                    tags: fields.Tags || [],
+                    difficulty: fields.Difficulty || difficulty,
+                    cost: fields.Cost || estimatedCost,
+                    calories: calories,
+                    servingSize: fields['Serving Size'] || 1,
+                    nutritionInfo: nutritionInfo,
                     custom: false
                 };
             });
+            
             renderRecipes();
+            showToast(`✅ Loaded ${state.recipes.length} recipes from Airtable!`);
         }
-    } catch(e) {}
+    } catch(e) {
+        showToast(`❌ Error loading recipes: ${e.message}`);
+        console.error('Fetch error:', e);
+    }
 }
 
 function showSampleRecipes() {
     state.recipes = [
-        {id:'s1',name:'Greek Yogurt Bowl',category:'Greek',protein:28,prepTime:5,ingredients:'Greek yogurt, granola, chia seeds',instructions:'Layer and enjoy',tags:['high-protein','quick'],difficulty:'easy',cost:6,custom:false},
-        {id:'s2',name:'Tofu Stir Fry',category:'Chinese',protein:25,prepTime:20,ingredients:'Tofu, mixed vegetables, soy sauce',instructions:'Stir fry all together',tags:['vegan','high-protein'],difficulty:'easy',cost:8,custom:false}
+        {id:'s1',name:'Greek Yogurt Bowl',category:'Greek',protein:28,prepTime:5,ingredients:'1 cup Greek yogurt\n1/2 cup granola\n2 tbsp chia seeds\n1 banana\n1 tbsp almond butter',instructions:'Layer yogurt in bowl, top with granola, chia seeds, sliced banana, and drizzle with almond butter',tags:['high-protein','quick','vegetarian'],difficulty:'easy',cost:6,custom:false},
+        {id:'s2',name:'Tofu Stir Fry',category:'Chinese',protein:25,prepTime:20,ingredients:'1 lb firm tofu\n2 cups mixed vegetables\n3 cloves garlic\n2 tbsp soy sauce\n1 cup brown rice',instructions:'Press and cube tofu. Stir fry with garlic until golden. Add vegetables and sauce. Serve over rice.',tags:['vegan','high-protein'],difficulty:'easy',cost:8,custom:false},
+        {id:'s3',name:'Chickpea Buddha Bowl',category:'Mediterranean',protein:30,prepTime:35,ingredients:'1 can chickpeas\n1 cup quinoa\n2 cups spinach\n1 cucumber\n1/4 cup tahini\n1 lemon',instructions:'Roast chickpeas at 400°F for 25min. Cook quinoa. Assemble bowl with greens, chickpeas, quinoa. Drizzle tahini-lemon dressing.',tags:['vegan','high-protein'],difficulty:'medium',cost:10,custom:false},
+        {id:'s4',name:'Lentil Dal',category:'Indian',protein:27,prepTime:40,ingredients:'1 cup red lentils\n1 can coconut milk\n2 tbsp curry powder\n1 onion\n3 cloves garlic\n2 cups brown rice',instructions:'Sauté onion and garlic. Add lentils, coconut milk, curry powder, and water. Simmer 30min. Serve over rice.',tags:['vegan','spicy'],difficulty:'medium',cost:9,custom:false},
+        {id:'s5',name:'Veggie Omelette',category:'American',protein:22,prepTime:10,ingredients:'3 eggs\n1 cup spinach\n1/2 cup bell peppers\n1/4 cup cheese\n1/2 cup mushrooms',instructions:'Whisk eggs. Sauté vegetables. Pour eggs over veggies, add cheese. Cook until set, fold and serve.',tags:['vegetarian','quick','high-protein'],difficulty:'easy',cost:5,custom:false},
+        {id:'s6',name:'Black Bean Tacos',category:'Mexican',protein:18,prepTime:15,ingredients:'1 can black beans\n6 corn tortillas\n1 avocado\n1 cup salsa\n1/2 cup cheese\n1 lime',instructions:'Heat beans with spices. Warm tortillas. Fill with beans, top with avocado, salsa, cheese, and lime.',tags:['vegetarian','quick'],difficulty:'easy',cost:7,custom:false},
+        {id:'s7',name:'Quinoa Salad',category:'Mediterranean',protein:16,prepTime:25,ingredients:'1 cup quinoa\n1 cucumber\n2 tomatoes\n1/2 cup feta\n1/4 cup olives\n2 tbsp olive oil\n1 lemon',instructions:'Cook quinoa and cool. Dice vegetables. Mix all ingredients with olive oil and lemon juice. Chill before serving.',tags:['vegetarian','gluten-free'],difficulty:'easy',cost:11,custom:false},
+        {id:'s8',name:'Peanut Noodles',category:'Thai',protein:20,prepTime:15,ingredients:'8 oz rice noodles\n1/4 cup peanut butter\n2 tbsp soy sauce\n1 tbsp sriracha\n2 cups edamame\n1 carrot',instructions:'Cook noodles. Mix peanut butter, soy sauce, sriracha. Toss noodles with sauce, edamame, and shredded carrot.',tags:['vegan','spicy','quick'],difficulty:'easy',cost:8,custom:false},
+        {id:'s9',name:'Caprese Sandwich',category:'Italian',protein:15,prepTime:5,ingredients:'2 slices sourdough bread\n4 oz mozzarella\n2 tomatoes\nFresh basil\n1 tbsp balsamic\n1 tbsp olive oil',instructions:'Layer mozzarella, tomato slices, and basil on bread. Drizzle with balsamic and olive oil. Grill or serve fresh.',tags:['vegetarian','quick'],difficulty:'easy',cost:6,custom:false},
+        {id:'s10',name:'Mushroom Risotto',category:'Italian',protein:12,prepTime:45,ingredients:'1 cup arborio rice\n2 cups mushrooms\n4 cups vegetable broth\n1/2 cup white wine\n1/2 cup parmesan\n1 onion',instructions:'Sauté onion and mushrooms. Add rice, toast 2min. Gradually add broth, stirring constantly. Finish with parmesan.',tags:['vegetarian'],difficulty:'hard',cost:14,custom:false}
     ];
 }
 
